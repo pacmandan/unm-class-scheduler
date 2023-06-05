@@ -1,7 +1,7 @@
 defmodule UnmClassScheduler.ScheduleParser.EventHandler do
   @behaviour Saxy.Handler
 
-  """
+  _notes = """
   Stray thoughts about goals, issues, and overall strategy. (Literally I'm just brain dumping into source code, I don't care.)
 
   The source XML file lists many parts of the schedule multiple times. It is organized:
