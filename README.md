@@ -1,5 +1,10 @@
 # UnmClassScheduler
 
+This is a personal project to create a personal class scheduler for UNM classes based on
+their public XML data.
+
+Data is hosted here: http://xmlschedule.unm.edu/index.html
+
 To start your Phoenix server:
 
   * Install dependencies with `mix deps.get`
