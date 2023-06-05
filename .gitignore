@@ -32,3 +32,6 @@ unm_class_scheduler-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Ignore UNM schedule XML source files (they're too big, and we need to download them anyway)
+/xmls
+

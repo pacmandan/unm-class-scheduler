@@ -4,7 +4,7 @@ import Config
 config :unm_class_scheduler, UnmClassScheduler.Repo,
   username: "unm_user",
   password: "localpass",
-  hostname: "localhost"
+  hostname: "localhost",
   database: "unm_class_scheduler_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
