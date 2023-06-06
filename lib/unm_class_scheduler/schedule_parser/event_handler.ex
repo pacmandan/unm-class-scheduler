@@ -99,13 +99,77 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
   Anyway, thank you for coming to my TED Talk.
   """
 
-  def handle_event(:start_document, _prolog, state) do
-    {:ok, state}
+  # TODO: This part should probably be moved.
+  # Initial state should be passed into the parser, so
+  # we should just have a function to call that runs the parser
+  # with proper initial state.
+  defp init_state do
+    %{
+      current_tags: %{},
+      extracted: %{
+        semesters: %{},
+        campuses: %{},
+        colleges: %{},
+      },
+    }
+  end
+
+  def handle_event(:start_document, _prolog, _state) do
+    {:ok, init_state()}
   end
 
   def handle_event(:end_document, _data, state) do
+    # Return the extracted keys
+    {:ok, state[:extracted]}
+  end
+
+  def handle_event(:start_element, {"unmschedule", _attributes}, state) do
     {:ok, state}
   end
+
+  def handle_event(:end_element, "unmschedule", state) do
+    {:ok, state}
+  end
+
+  def handle_event(:start_element, {"semester", attributes}, %{current_tags: tags, extracted: ex}) do
+    mattrs = Map.new(attributes)
+    new_state = %{
+      current_tags: add_current_tag(tags, :semester, mattrs["code"]),
+      extracted: put_in(ex, [:semesters, mattrs["code"]], mattrs)
+    }
+    {:ok, new_state}
+  end
+
+  def handle_event(:end_element, "semester", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :semester))}
+  end
+
+  def handle_event(:start_element, {"campus", attributes}, %{current_tags: tags, extracted: ex}) do
+    mattrs = Map.new(attributes)
+    new_state = %{
+      current_tags: add_current_tag(tags, :campus, mattrs["code"]),
+      extracted: put_in(ex, [:campuses, mattrs["code"]], mattrs)
+    }
+    {:ok, new_state}
+  end
+
+  def handle_event(:end_element, "campus", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :campus))}
+  end
+
+  def handle_event(:start_element, {"college", attributes}, %{current_tags: tags, extracted: ex}) do
+    mattrs = Map.new(attributes)
+    new_state = %{
+      current_tags: add_current_tag(tags, :college, mattrs["code"]),
+      extracted: put_in(ex, [:colleges, mattrs["code"]], mattrs)
+    }
+    {:ok, new_state}
+  end
+
+  def handle_event(:end_element, "college", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :college))}
+  end
+
 
   # Default element handlers
   # Need more nuance here - internal elements to the ignored ones could mess up context/state
@@ -121,5 +185,15 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
   def handle_event(:characters, _chars, state) do
     # Need to use state for context of where we are in the file - only text from between tags is passed here.
     {:ok, state}
+  end
+
+  defp add_current_tag(tags, tag_type, tag_key) do
+    tags
+    |> Map.put(tag_type, tag_key)
+  end
+
+  defp delete_current_tag(tags, tag_type) do
+    tags
+    |> Map.delete(tag_type)
   end
 end
