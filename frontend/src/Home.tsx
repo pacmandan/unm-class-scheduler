@@ -1,7 +1,3 @@
-/**
- * Home page of the application.
- * Will contain links to the SPA, and other pages like About.
- */
 function HomePage() {
     return (
         <>
