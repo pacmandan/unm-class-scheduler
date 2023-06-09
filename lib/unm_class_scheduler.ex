@@ -11,6 +11,7 @@ defmodule UnmClassScheduler do
     Semester,
     Campus,
     College,
+    Department,
   }
 
   def testload do
@@ -75,6 +76,23 @@ defmodule UnmClassScheduler do
         )
       end)
       {:ok, colleges}
+    end)
+    |> Ecto.Multi.run(:departments, fn repo, _ ->
+      departments = Enum.map(state[:departments], fn {_, attrs} ->
+        IO.inspect(attrs)
+        {college_attrs, attrs} = attrs |> Map.pop(:college)
+        IO.inspect(college_attrs)
+        IO.inspect(attrs)
+        college = repo.get_by!(College, college_attrs)
+        Ecto.build_assoc(college, :departments)
+        |> Department.changeset(attrs)
+        |> repo.insert!(
+          on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
+          conflict_target: :code,
+          returning: true
+        )
+      end)
+      {:ok, departments}
     end)
 
     UnmClassScheduler.Repo.transaction(multi)

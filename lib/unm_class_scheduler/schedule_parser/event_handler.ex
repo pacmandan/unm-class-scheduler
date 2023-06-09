@@ -110,6 +110,7 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
         semesters: %{},
         campuses: %{},
         colleges: %{},
+        departments: %{},
       },
     }
   end
@@ -168,6 +169,23 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
 
   def handle_event(:end_element, "college", %{current_tags: tags} = state) do
     {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :college))}
+  end
+
+  def handle_event(:start_element, {"department", attributes}, %{current_tags: tags, extracted: ex}) do
+    mattrs = Map.new(attributes)
+    |> Map.merge(%{
+      college: %{code: tags[:college]}
+    })
+
+    new_state = %{
+      current_tags: add_current_tag(tags, :department, mattrs["code"]),
+      extracted: put_in(ex, [:departments, mattrs["code"]], mattrs)
+    }
+    {:ok, new_state}
+  end
+
+  def handle_event(:end_element, "department", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :department))}
   end
 
 
