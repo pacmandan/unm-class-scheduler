@@ -111,6 +111,9 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
         campuses: %{},
         colleges: %{},
         departments: %{},
+        subjects: %{},
+        courses: %{},
+        sections: %{},
       },
     }
   end
@@ -188,6 +191,74 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :department))}
   end
 
+  def handle_event(:start_element, {"subject", attributes}, %{current_tags: tags, extracted: ex}) do
+    mattrs = Map.new(attributes)
+    |> Map.merge(%{
+      department: %{code: tags[:department]}
+    })
+
+    new_state = %{
+      current_tags: add_current_tag(tags, :subject, mattrs["code"]),
+      extracted: put_in(ex, [:subjects, mattrs["code"]], mattrs)
+    }
+    {:ok, new_state}
+  end
+
+  def handle_event(:end_element, "subject", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :subject))}
+  end
+
+
+  def handle_event(:start_element, {"course", attributes}, %{current_tags: tags, extracted: ex}) do
+    mattrs = Map.new(attributes)
+    |> Map.merge(%{
+      subject: %{code: tags[:subject]}
+    })
+
+    course_key = build_course_key(tags[:subject], mattrs["number"])
+
+    new_state = %{
+      current_tags: add_current_tag(tags, :course, course_key),
+      extracted: put_in(ex, [:courses, course_key], mattrs)
+    }
+    {:ok, new_state}
+  end
+
+  def handle_event(:end_element, "course", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :course))}
+  end
+
+  def handle_event(:start_element, {"catalog-description", _attributes}, %{current_tags: tags, extracted: ex}) do
+    new_state = %{
+      current_tags: add_current_tag(tags, :catalog_description, true),
+      extracted: ex
+    }
+    {:ok, new_state}
+  end
+
+  def handle_event(:end_element, "catalog-description", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :catalog_description))}
+  end
+
+  def handle_event(:start_element, {"section", attributes}, %{current_tags: tags, extracted: ex}) do
+    [subject_code, course_number] = split_course_key(tags[:course])
+    mattrs = Map.new(attributes)
+    |> Map.merge(%{
+      subject: %{code: subject_code},
+      course: %{number: course_number},
+      semester: %{code: tags[:semester]}
+    })
+
+    new_state = %{
+      current_tags: add_current_tag(tags, :section, mattrs["crn"]),
+      extracted: put_in(ex, [:sections, mattrs["crn"]], mattrs)
+    }
+    {:ok, new_state}
+  end
+
+  def handle_event(:end_element, "section", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :section))}
+  end
 
   # Default element handlers
   # Need more nuance here - internal elements to the ignored ones could mess up context/state
@@ -200,9 +271,16 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, state}
   end
 
-  def handle_event(:characters, _chars, state) do
+  def handle_event(:characters, chars, %{current_tags: tags, extracted: ex}) do
     # Need to use state for context of where we are in the file - only text from between tags is passed here.
-    {:ok, state}
+    new_ex = case tags do
+      # Catalog description for a course
+      %{course: course_key, catalog_description: true} ->
+        put_in(ex, [:courses, course_key, "catalog_description"], chars)
+      # Unknown state, return ex as is.
+      _ -> ex
+    end
+    {:ok, %{current_tags: tags, extracted: new_ex}}
   end
 
   defp add_current_tag(tags, tag_type, tag_key) do
@@ -213,5 +291,13 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
   defp delete_current_tag(tags, tag_type) do
     tags
     |> Map.delete(tag_type)
+  end
+
+  defp build_course_key(subject_code, course_number) do
+    "#{subject_code}__#{course_number}"
+  end
+
+  defp split_course_key(key) do
+    String.split(key, "__", parts: 2)
   end
 end

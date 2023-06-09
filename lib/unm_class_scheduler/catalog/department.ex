@@ -1,7 +1,10 @@
 defmodule UnmClassScheduler.Catalog.Department do
   use UnmClassScheduler.Schema
 
-  alias UnmClassScheduler.Catalog.{College}
+  alias UnmClassScheduler.Catalog.{
+    College,
+    Subject
+  }
 
   import Ecto.Changeset
 
@@ -10,6 +13,7 @@ defmodule UnmClassScheduler.Catalog.Department do
     field :name, :string
 
     belongs_to :college, College, references: :uuid, foreign_key: :college_uuid
+    has_many :subjects, Subject, references: :uuid, foreign_key: :department_uuid
 
     timestamps()
   end

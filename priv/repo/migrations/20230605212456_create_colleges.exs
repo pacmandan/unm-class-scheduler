@@ -4,8 +4,8 @@ defmodule UnmClassScheduler.Repo.Migrations.CreateColleges do
   def change do
     create table(:colleges, primary_key: false) do
       add :uuid, :uuid, primary_key: true
-      add :code, :string
-      add :name, :string
+      add :code, :string, null: false
+      add :name, :string, null: false
       timestamps()
     end
 
