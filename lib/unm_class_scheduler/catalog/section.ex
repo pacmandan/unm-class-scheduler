@@ -18,10 +18,11 @@ defmodule UnmClassScheduler.Catalog.Section do
     timestamps()
   end
 
-  def changeset(course, attrs) do
-    course
+  def create_section(attrs, course, semester) do
+    Ecto.build_assoc(course, :sections)
     |> cast(attrs, [:crn, :number])
-    |> validate_required([:crn, :number, :course_uuid, :semester_uuid])
-    |> unique_constraint([:crn, :course_uuid, :semester_uuid])
+    |> put_assoc(:semester, semester)
+    |> validate_required([:crn, :number, :course_uuid, :semester])
+    |> unique_constraint([:crn, :course_uuid, :semester])
   end
 end

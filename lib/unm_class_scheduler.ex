@@ -53,6 +53,8 @@ defmodule UnmClassScheduler do
           conflict_target: :code,
           returning: true
         )
+      end) |> Enum.reduce(%{}, fn semester, acc ->
+        Map.put(acc, semester.code, semester)
       end)
       {:ok, semesters}
     end)
@@ -91,67 +93,65 @@ defmodule UnmClassScheduler do
           conflict_target: :code,
           returning: true
         )
+      end) |> Enum.reduce(%{}, fn department, acc ->
+        Map.put(acc, department.code, department)
       end)
       {:ok, departments}
     end)
-    |> Ecto.Multi.run(:subjects, fn repo, _ ->
+    |> Ecto.Multi.run(:subjects, fn repo, updated ->
       subjects = Enum.map(state[:subjects], fn {_, attrs} ->
         {department_attrs, attrs} = attrs |> Map.pop(:department)
-        department = repo.get_by!(Department, department_attrs)
-        Ecto.build_assoc(department, :subjects)
+
+        updated
+        |> get_in([:departments, department_attrs[:code]])
+        |> Ecto.build_assoc(:subjects)
         |> Subject.changeset(attrs)
         |> repo.insert!(
           on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
           conflict_target: :code,
           returning: true
         )
+      end) |> Enum.reduce(%{}, fn subject, acc ->
+        Map.put(acc, subject.code, subject)
       end)
       {:ok, subjects}
     end)
-    |> Ecto.Multi.run(:courses, fn repo, _ ->
+    |> Ecto.Multi.run(:courses, fn repo, updated ->
       courses = Enum.map(state[:courses], fn {_, attrs} ->
         {subject_attrs, attrs} = attrs |> Map.pop(:subject)
-        subject = repo.get_by!(Subject, subject_attrs)
-        Ecto.build_assoc(subject, :courses)
+
+        updated
+        |> get_in([:subjects, subject_attrs[:code]])
+        |> Ecto.build_assoc(:courses)
         |> Course.changeset(attrs)
         |> repo.insert!(
           on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
           conflict_target: [:subject_uuid, :number],
           returning: true
-        )
+        ) |> (&({subject_attrs[:code], &1})).()
+      end) |> Enum.reduce(%{}, fn {subject_code, course}, acc ->
+        Map.put(acc, "#{subject_code}__#{course.number}", course)
       end)
       {:ok, courses}
     end)
     # FIXME: Not entirely sure how best to make this part work, since it has multiple parent associations,
     # and one of them doesn't even have a unique code I can look for.
-    |> Ecto.Multi.run(:sections, fn _repo, _ ->
-      sections = Enum.map(state[:sections], fn {_, _attrs} ->
-        true #<-- Added to make the warning go away for now.
-
+    |> Ecto.Multi.run(:sections, fn repo, updated ->
+      sections = Enum.map(state[:sections], fn {_, attrs} ->
         # There has to be a cleaner way to achieve this...
-        # {subject_attrs, attrs} = attrs |> Map.pop(:subject)
-        # {course_attrs, attrs} = attrs |> Map.pop(:course)
-        # {semester_attrs, attrs} = attrs |> Map.pop(:semester)
+        {subject_attrs, attrs} = attrs |> Map.pop(:subject)
+        {course_attrs, attrs} = attrs |> Map.pop(:course)
+        {semester_attrs, attrs} = attrs |> Map.pop(:semester)
 
+        course = get_in(updated, [:courses, "#{subject_attrs[:code]}__#{course_attrs[:number]}"])
+        semester = get_in(updated, [:semesters, semester_attrs[:code]])
 
-        # #Ecto.Query.where()
-
-        # Surely I can do this in two calls?
-        # semester = repo.get_by!(Semester, semester_attrs)
-        # subject = repo.get_by!(Subject, subject_attrs)
-        # course = repo.get_by!(Course, )
-
-        # Should part of this association building be in the model?
-        # Ecto.build_assoc(course, :sections)
-        # |> Ecto.Changeset.put_assoc(:semester, semester)
-        # Since validation is run on changeset(), need to add associations first?
-        # Maybe figure out another way to do this?
-        # |> Section.changeset(attrs)
-        # |> repo.insert!(
-        #   on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
-        #   conflict_target: [:crn, :semester_uuid],
-        #   returning: true
-        # )
+        Section.create_section(attrs, course, semester)
+        |> repo.insert!(
+          on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
+          conflict_target: [:crn, :semester_uuid],
+          returning: true
+        )
       end)
       {:ok, sections}
     end)
