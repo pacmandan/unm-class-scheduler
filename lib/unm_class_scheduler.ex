@@ -17,6 +17,8 @@ defmodule UnmClassScheduler do
     Section,
   }
 
+  # FIXME: This is just me sandboxing solutions. I do not intend to keep ANY of this code in this module.
+
   def testload do
     stream = File.stream!(Path.expand("./xmls/current.xml"))
     {:ok, state} = Saxy.parse_stream(stream, UnmClassScheduler.ScheduleParser.EventHandler, %{})
@@ -42,31 +44,60 @@ defmodule UnmClassScheduler do
     }
   end
 
+  def repo_insert(changeset, repo, conflict_target) do
+    repo.insert!(
+      changeset,
+      on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
+      conflict_target: conflict_target,
+      returning: true
+    )
+  end
+
+  def cache_inserted(inserted, keyfn) do
+    cache_inserted(inserted, keyfn, &no_op/1)
+  end
+
+  def cache_inserted(inserted, keyfn, valuefn) do
+    Enum.reduce(inserted, %{}, fn value, acc ->
+      Map.put(acc, keyfn.(value), valuefn.(value))
+    end)
+  end
+
+  def no_op(value) do
+    value
+  end
+
+  def get_code(changeset) do
+    changeset.code
+  end
+
+  def course_code(course) when not is_nil(course.subject) do
+    course_code(course, course.subject)
+  end
+
+  def course_code(course, subject) when is_struct(course) and is_struct(subject) do
+    course_code(course.number, subject.code)
+  end
+
+  def course_code(course_number, subject_code) when is_binary(course_number) and is_binary(subject_code) do
+    "#{subject_code}__#{course_number}"
+  end
+
   def testinsert(state) do
     multi = Ecto.Multi.new()
     |> Ecto.Multi.run(:semesters, fn repo, _ ->
       semesters = Enum.map(state[:semesters], fn {_, attrs} ->
         %Semester{}
         |> Semester.changeset(attrs)
-        |> repo.insert!(
-          on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
-          conflict_target: :code,
-          returning: true
-        )
-      end) |> Enum.reduce(%{}, fn semester, acc ->
-        Map.put(acc, semester.code, semester)
-      end)
+        |> repo_insert(repo, :code)
+      end) |> cache_inserted(&get_code/1)
       {:ok, semesters}
     end)
     |> Ecto.Multi.run(:campuses, fn repo, _ ->
       campuses = Enum.map(state[:campuses], fn {_, attrs} ->
         %Campus{}
         |> Campus.changeset(attrs)
-        |> repo.insert!(
-          on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
-          conflict_target: :code,
-          returning: true
-        )
+        |> repo_insert(repo, :code)
       end)
       {:ok, campuses}
     end)
@@ -74,28 +105,20 @@ defmodule UnmClassScheduler do
       colleges = Enum.map(state[:colleges], fn {_, attrs} ->
         %College{}
         |> College.changeset(attrs)
-        |> repo.insert!(
-          on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
-          conflict_target: :code,
-          returning: true
-        )
-      end)
+        |> repo_insert(repo, :code)
+      end) |> cache_inserted(&get_code/1)
       {:ok, colleges}
     end)
-    |> Ecto.Multi.run(:departments, fn repo, _ ->
+    |> Ecto.Multi.run(:departments, fn repo, updated ->
       departments = Enum.map(state[:departments], fn {_, attrs} ->
         {college_attrs, attrs} = attrs |> Map.pop(:college)
-        college = repo.get_by!(College, college_attrs)
-        Ecto.build_assoc(college, :departments)
+
+        updated
+        |> get_in([:colleges, college_attrs[:code]])
+        |> Ecto.build_assoc(:departments)
         |> Department.changeset(attrs)
-        |> repo.insert!(
-          on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
-          conflict_target: :code,
-          returning: true
-        )
-      end) |> Enum.reduce(%{}, fn department, acc ->
-        Map.put(acc, department.code, department)
-      end)
+        |> repo_insert(repo, :code)
+      end) |> cache_inserted(&get_code/1)
       {:ok, departments}
     end)
     |> Ecto.Multi.run(:subjects, fn repo, updated ->
@@ -106,53 +129,38 @@ defmodule UnmClassScheduler do
         |> get_in([:departments, department_attrs[:code]])
         |> Ecto.build_assoc(:subjects)
         |> Subject.changeset(attrs)
-        |> repo.insert!(
-          on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
-          conflict_target: :code,
-          returning: true
-        )
-      end) |> Enum.reduce(%{}, fn subject, acc ->
-        Map.put(acc, subject.code, subject)
-      end)
+        |> repo_insert(repo, :code)
+      end) |> cache_inserted(&get_code/1)
       {:ok, subjects}
     end)
     |> Ecto.Multi.run(:courses, fn repo, updated ->
       courses = Enum.map(state[:courses], fn {_, attrs} ->
-        {subject_attrs, attrs} = attrs |> Map.pop(:subject)
 
-        updated
-        |> get_in([:subjects, subject_attrs[:code]])
-        |> Ecto.build_assoc(:courses)
-        |> Course.changeset(attrs)
-        |> repo.insert!(
-          on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
-          conflict_target: [:subject_uuid, :number],
-          returning: true
-        ) |> (&({subject_attrs[:code], &1})).()
-      end) |> Enum.reduce(%{}, fn {subject_code, course}, acc ->
-        Map.put(acc, "#{subject_code}__#{course.number}", course)
-      end)
+        with {subject_attrs, attrs} <- attrs |> Map.pop(:subject),
+              subject <- get_in(updated, [:subjects, subject_attrs[:code]])
+        do
+          subject
+          |> Ecto.build_assoc(:courses)
+          |> Course.changeset(attrs)
+          |> repo_insert(repo, [:subject_uuid, :number])
+          |> (&({&1, subject})).()
+        end
+
+      end) |> cache_inserted((fn {course, subj} -> course_code(course, subj) end), &(elem(&1, 0)))
       {:ok, courses}
     end)
-    # FIXME: Not entirely sure how best to make this part work, since it has multiple parent associations,
-    # and one of them doesn't even have a unique code I can look for.
     |> Ecto.Multi.run(:sections, fn repo, updated ->
       sections = Enum.map(state[:sections], fn {_, attrs} ->
-        # There has to be a cleaner way to achieve this...
-        {subject_attrs, attrs} = attrs |> Map.pop(:subject)
-        {course_attrs, attrs} = attrs |> Map.pop(:course)
-        {semester_attrs, attrs} = attrs |> Map.pop(:semester)
-
-        course = get_in(updated, [:courses, "#{subject_attrs[:code]}__#{course_attrs[:number]}"])
-        semester = get_in(updated, [:semesters, semester_attrs[:code]])
-
-        Section.create_section(attrs, course, semester)
-        |> repo.insert!(
-          on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
-          conflict_target: [:crn, :semester_uuid],
-          returning: true
-        )
-      end)
+        with {subject_attrs, attrs} <- attrs |> Map.pop(:subject),
+             {course_attrs, attrs} <- attrs |> Map.pop(:course),
+             {semester_attrs, attrs} <- attrs |> Map.pop(:semester),
+             course <- get_in(updated, [:courses, course_code(course_attrs[:number], subject_attrs[:code])]),
+             semester <- get_in(updated, [:semesters, semester_attrs[:code]])
+        do
+          Section.create_section(attrs, course, semester)
+          |> repo_insert(repo, [:crn, :semester_uuid])
+        end
+      end) |> cache_inserted(&(&1.crn))
       {:ok, sections}
     end)
 
