@@ -8,6 +8,7 @@ import {
   RouterProvider,
 } from 'react-router-dom'
 import './index.css'
+import Sandbox from './Sandbox.tsx'
 
 const router = createBrowserRouter([
   {
@@ -21,6 +22,11 @@ const router = createBrowserRouter([
   {
     path: '/app',
     element: <App />
+  },
+  // TODO: Find a way to ONLY include this in dev environment.
+  {
+    path: '/sandbox',
+    element: <Sandbox />
   }
 ]);
 
