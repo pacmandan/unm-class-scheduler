@@ -1,18 +1,22 @@
 import React from 'react';
 import CourseTag from './CourseTag';
 
-const sections = [{
+const sections: Section[] = [{
     course: {
         number: "105L",
         title: "Intro to Computer Programming",
-    },
-    subject: {
-        code: "CS",
-        name: "Computer Science",
+        subject: {
+            code: "CS",
+            name: "Computer Science",
+        },
     },
     campus: {
         code: "ABQ",
         name: "Albuquerque/Main",
+    },
+    semester: {
+        code: '202310',
+        name: 'Spring 2023',
     },
     meeting_times: [{
         days: ["W"],
@@ -53,60 +57,70 @@ const sections = [{
     waitlist_max: 0,
     catalog_description: "Introduction to Computer Programming is a gentle and fun introduction. Students will use a modern Integrated Development Environment to author small programs in a high level language that do interesting things.",
     status: "A",
-    fees: 45,
+    fees: "45",
 },{
     course: {
-        number: "105L",
-        title: "Intro to Computer Programming",
-    },
-    subject: {
-        code: "CS",
-        name: "Computer Science",
+        number: "1512",
+        title: "Calculus I",
+        subject: {
+            code: "MATH",
+            name: "Mathmatics",
+        },
     },
     campus: {
         code: "ABQ",
         name: "Albuquerque/Main",
     },
+    semester: {
+        code: '202310',
+        name: 'Spring 2023',
+    },
     meeting_times: [{
-        days: ["W"],
-        start_time: "1200",
-        end_time: "1345",
+        days: ["M","W","F"],
+        start_time: "0900",
+        end_time: "0950",
         building: {
-            code: "SMLC",
-            name: "Science Math Learning Center"
+            code: "DSH",
+            name: "Dane Smith Hall"
         },
-        room: "B81",
+        room: "329",
     },{
-        days: ["T","R"],
+        days: ["T"],
         start_time: "0930",
         end_time: "1045",
         building: {
-            code: "CENT",
-            name: "Centennial Engineering Center"
+            code: "DSH",
+            name: "Dane Smith Hall"
         },
-        room: "1041"
+        room: "329"
     }],
     instructors: [{
         primary: true,
-        first: "Joseph",
-        last: "Haugh",
+        first: "Kevin",
+        last: "Burns",
         middle: "",
-        email: "glue500@unm.edu",
+        email: "kburns@unm.edu",
     }],
-    crosslists: ["37993", "37994"],
+    crosslists: ["51530", "51660"],
     number: "001",
-    crn: "37993",
+    crn: "51529",
     part_of_term: "1",
     instructional_method: "ENH",
-    delivery_type: "LL",
-    credits: 3,
-    enrollment: 23,
-    enrollment_max: 18,
+    delivery_type: "LC",
+    credits: 4,
+    enrollment: 13,
+    enrollment_max: 16,
     waitlist: 0,
     waitlist_max: 0,
-    catalog_description: "Introduction to Computer Programming is a gentle and fun introduction. Students will use a modern Integrated Development Environment to author small programs in a high level language that do interesting things.",
+    catalog_description: `Limits. Continuity. Derivative: definition, rules, geometric interpretation and as rate-of-change, applications to graphing, linearization and optimization. Integral: definition, fundamental theorem of calculus, substitution, applications such as areas, volumes, work, averages.
+
+    Credit for both this course and MATH 1430 may not be applied toward a degree program.
+    
+    Meets New Mexico General Education Curriculum Area 2: Mathematics and Statistics.
+    
+    Prerequisite: (1230 and 1240) or 1250 or ACT Math =&gt;28 or SAT Math Section =&gt;640 or ACCUPLACER Next-Generation Advanced Algebra and Functions =&gt;284 or Lobo Course Placement Math =&gt;70.`,
     status: "A",
-    fees: 45,
+    fees: "0",
 }]
 
 export default class Sandbox extends React.Component {
