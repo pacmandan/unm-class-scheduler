@@ -127,14 +127,23 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, state[:extracted]}
   end
 
+  ##
+  # <unmschedule>
+  ##
   def handle_event(:start_element, {"unmschedule", _attributes}, state) do
     {:ok, state}
   end
 
+  ##
+  # </unmschedule>
+  ##
   def handle_event(:end_element, "unmschedule", state) do
     {:ok, state}
   end
 
+  ##
+  # <semester>
+  ##
   def handle_event(:start_element, {"semester", attributes}, %{current_tags: tags, extracted: ex}) do
     mattrs = Map.new(attributes)
     new_state = %{
@@ -144,10 +153,16 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, new_state}
   end
 
+  ##
+  # </semester>
+  ##
   def handle_event(:end_element, "semester", %{current_tags: tags} = state) do
     {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :semester))}
   end
 
+  ##
+  # <campus>
+  ##
   def handle_event(:start_element, {"campus", attributes}, %{current_tags: tags, extracted: ex}) do
     mattrs = Map.new(attributes)
     new_state = %{
@@ -157,10 +172,16 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, new_state}
   end
 
+  ##
+  # <campus>
+  ##
   def handle_event(:end_element, "campus", %{current_tags: tags} = state) do
     {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :campus))}
   end
 
+  ##
+  # <college>
+  ##
   def handle_event(:start_element, {"college", attributes}, %{current_tags: tags, extracted: ex}) do
     mattrs = Map.new(attributes)
     new_state = %{
@@ -170,10 +191,16 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, new_state}
   end
 
+  ##
+  # </college>
+  ##
   def handle_event(:end_element, "college", %{current_tags: tags} = state) do
     {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :college))}
   end
 
+  ##
+  # <department>
+  ##
   def handle_event(:start_element, {"department", attributes}, %{current_tags: tags, extracted: ex}) do
     mattrs = Map.new(attributes)
     |> Map.merge(%{
@@ -187,10 +214,16 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, new_state}
   end
 
+  ##
+  # </department>
+  ##
   def handle_event(:end_element, "department", %{current_tags: tags} = state) do
     {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :department))}
   end
 
+  ##
+  # <subject>
+  ##
   def handle_event(:start_element, {"subject", attributes}, %{current_tags: tags, extracted: ex}) do
     mattrs = Map.new(attributes)
     |> Map.merge(%{
@@ -204,11 +237,17 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, new_state}
   end
 
+  ##
+  # </subject>
+  ##
   def handle_event(:end_element, "subject", %{current_tags: tags} = state) do
     {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :subject))}
   end
 
 
+  ##
+  # <course>
+  ##
   def handle_event(:start_element, {"course", attributes}, %{current_tags: tags, extracted: ex}) do
     mattrs = Map.new(attributes)
     |> Map.merge(%{
@@ -224,10 +263,16 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, new_state}
   end
 
+  ##
+  # </course>
+  ##
   def handle_event(:end_element, "course", %{current_tags: tags} = state) do
     {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :course))}
   end
 
+  ##
+  # <catalog-description>
+  ##
   def handle_event(:start_element, {"catalog-description", _attributes}, %{current_tags: tags, extracted: ex}) do
     new_state = %{
       current_tags: add_current_tag(tags, :catalog_description, true),
@@ -236,29 +281,172 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, new_state}
   end
 
+  ##
+  # </catalog-description>
+  ##
   def handle_event(:end_element, "catalog-description", %{current_tags: tags} = state) do
     {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :catalog_description))}
   end
 
+  ##
+  # <section>
+  ##
   def handle_event(:start_element, {"section", attributes}, %{current_tags: tags, extracted: ex}) do
-    [subject_code, course_number] = split_course_key(tags[:course])
-    mattrs = Map.new(attributes)
-    |> Map.merge(%{
-      subject: %{code: subject_code},
-      course: %{number: course_number},
-      semester: %{code: tags[:semester]}
-    })
+    if tags[:crosslists] do
+      # TODO: Add crosslist handling
+      {:ok, %{current_tags: tags, extracted: ex}}
+    else
+      [subject_code, course_number] = split_course_key(tags[:course])
+      mattrs = Map.new(attributes)
+      |> Map.merge(%{
+        subject: %{code: subject_code},
+        course: %{number: course_number},
+        semester: %{code: tags[:semester]}
+      }) |> rename_key("part-of-term", "part_of_term")
 
+      new_state = %{
+        current_tags: add_current_tag(tags, :section, mattrs["crn"]),
+        extracted: put_in(ex, [:sections, mattrs["crn"]], mattrs)
+      }
+      {:ok, new_state}
+    end
+  end
+
+  ##
+  # </section>
+  ##
+  def handle_event(:end_element, "section", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :section))}
+  end
+
+  ##
+  # <enrollment>
+  ##
+  def handle_event(:start_element, {"enrollment", %{max: max}}, %{current_tags: tags, extracted: ex}) do
     new_state = %{
-      current_tags: add_current_tag(tags, :section, mattrs["crn"]),
-      extracted: put_in(ex, [:sections, mattrs["crn"]], mattrs)
+      current_tags: add_current_tag(tags, :enrollment, true),
+      extracted: put_in(ex, [:sections, tags[:section], :enrollment_max], max)
     }
     {:ok, new_state}
   end
 
-  def handle_event(:end_element, "section", %{current_tags: tags} = state) do
-    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :section))}
+  ##
+  # </enrollment>
+  ##
+  def handle_event(:end_element, "enrollment", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :enrollment))}
   end
+
+  ##
+  # <waitlist>
+  ##
+  def handle_event(:start_element, {"waitlist", %{max: max}}, %{current_tags: tags, extracted: ex}) do
+    new_state = %{
+      current_tags: add_current_tag(tags, :waitlist, true),
+      extracted: put_in(ex, [:sections, tags[:section], :waitlist_max], max)
+    }
+    {:ok, new_state}
+  end
+
+  ##
+  # </waitlist>
+  ##
+  def handle_event(:end_element, "waitlist", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :waitlist))}
+  end
+
+  # TODO: Unify these since they're all the same function.
+
+  ##
+  # <section-title>
+  ##
+  def handle_event(:start_element, {"section-title", _attributes}, %{current_tags: tags, extracted: ex}) do
+    new_state = %{
+      current_tags: add_current_tag(tags, :section_title, true),
+      extracted: ex
+    }
+    {:ok, new_state}
+  end
+
+  ##
+  # </section-title>
+  ##
+  def handle_event(:end_element, "section-title", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :section_title))}
+  end
+
+  ##
+  # <text>
+  ##
+  def handle_event(:start_element, {"text", _attributes}, %{current_tags: tags, extracted: ex}) do
+    new_state = %{
+      current_tags: add_current_tag(tags, :text, true),
+      extracted: ex
+    }
+    {:ok, new_state}
+  end
+
+  ##
+  # </text>
+  ##
+  def handle_event(:end_element, "text", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :text))}
+  end
+
+  ##
+  # <fees>
+  ##
+  def handle_event(:start_element, {"fees", _attributes}, %{current_tags: tags, extracted: ex}) do
+    new_state = %{
+      current_tags: add_current_tag(tags, :fees, true),
+      extracted: ex
+    }
+    {:ok, new_state}
+  end
+
+  ##
+  # </fees>
+  ##
+  def handle_event(:end_element, "fees", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :fees))}
+  end
+
+  ##
+  # <credits>
+  ##
+  def handle_event(:start_element, {"credits", _attributes}, %{current_tags: tags, extracted: ex}) do
+    new_state = %{
+      current_tags: add_current_tag(tags, :credits, true),
+      extracted: ex
+    }
+    {:ok, new_state}
+  end
+
+  ##
+  # </credits>
+  ##
+  def handle_event(:end_element, "credits", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :credits))}
+  end
+
+  ##
+  # <crosslists>
+  ##
+  def handle_event(:start_element, {"crosslists", _attributes}, %{current_tags: tags, extracted: ex}) do
+    new_state = %{
+      current_tags: add_current_tag(tags, :crosslists, true),
+      extracted: ex
+    }
+    {:ok, new_state}
+  end
+
+  ##
+  # </crosslists>
+  ##
+  def handle_event(:end_element, "crosslists", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :crosslists))}
+  end
+
 
   # Default element handlers
   # Need more nuance here - internal elements to the ignored ones could mess up context/state
@@ -277,6 +465,22 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
       # Catalog description for a course
       %{course: course_key, catalog_description: true} ->
         put_in(ex, [:courses, course_key, "catalog_description"], chars)
+      %{section: crn, enrollment: true} ->
+        put_in(ex, [:sections, crn, "enrollment"], chars)
+      %{section: crn, waitlist: true} ->
+        put_in(ex, [:sections, crn, "waitlist"], chars)
+      %{section: crn, section_title: true} ->
+        put_in(ex, [:sections, crn, "title"], chars)
+      %{section: crn, text: true} ->
+        put_in(ex, [:sections, crn, "text"], chars)
+      %{section: crn, fees: true} ->
+        {fee, _} = Float.parse(chars)
+        put_in(ex, [:sections, crn, "fees"], fee)
+      %{section: crn, credits: true} ->
+        # TODO: Credits should be integer.
+        # But some credits are listed as "1 TO 6".
+        # Split credits into min and max, maybe?
+        put_in(ex, [:sections, crn, "credits"], chars)
       # Unknown state, return ex as is.
       _ -> ex
     end
@@ -299,5 +503,10 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
 
   defp split_course_key(key) do
     String.split(key, "__", parts: 2)
+  end
+
+  # FIXME: Move into a utils module
+  defp rename_key(map, old_key, new_key) do
+    with {v, m} <- Map.pop(map, old_key), do: Map.put(m, new_key, v)
   end
 end

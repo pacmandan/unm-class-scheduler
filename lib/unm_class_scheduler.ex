@@ -15,6 +15,8 @@ defmodule UnmClassScheduler do
     Subject,
     Course,
     Section,
+    PartOfTerm,
+    Status,
   }
 
   # FIXME: This is just me sandboxing solutions. I do not intend to keep ANY of this code in this module.
@@ -84,6 +86,13 @@ defmodule UnmClassScheduler do
   end
 
   def testinsert(state) do
+    # TODO: Figure out how to cache these ahead of time to avoid repeated read queries
+    # parts_of_term = UnmClassScheduler.Repo.all(from(PartOfTerm, []))
+    # |> Enum.reduce(%{}, fn pot, acc -> Map.put(acc, pot[:code], pot) end)
+
+    # statuses = UnmClassScheduler.Repo.all(from(Status, []))
+    # |> Enum.reduce(%{}, fn status, acc -> Map.put(acc, status[:code], status) end)
+
     multi = Ecto.Multi.new()
     |> Ecto.Multi.run(:semesters, fn repo, _ ->
       semesters = Enum.map(state[:semesters], fn {_, attrs} ->
@@ -154,16 +163,22 @@ defmodule UnmClassScheduler do
         with {subject_attrs, attrs} <- attrs |> Map.pop(:subject),
              {course_attrs, attrs} <- attrs |> Map.pop(:course),
              {semester_attrs, attrs} <- attrs |> Map.pop(:semester),
+             {part_of_term_code, attrs} <- attrs |> Map.pop("part_of_term"),
+             {status_code, attrs} <- attrs |> Map.pop("status"),
              course <- get_in(updated, [:courses, course_code(course_attrs[:number], subject_attrs[:code])]),
-             semester <- get_in(updated, [:semesters, semester_attrs[:code]])
+             semester <- get_in(updated, [:semesters, semester_attrs[:code]]),
+             # part_of_term <- Map.get(parts_of_term, part_of_term_code),
+             part_of_term <- repo.get_by(PartOfTerm, code: part_of_term_code),
+             # status <- Map.get(statuses, status_code)
+             status <- repo.get_by(Status, code: status_code)
         do
-          Section.create_section(attrs, course, semester)
+          Section.create_section(attrs, course, semester, part_of_term, status)
           |> repo_insert(repo, [:crn, :semester_uuid])
         end
       end) |> cache_inserted(&(&1.crn))
       {:ok, sections}
     end)
 
-    UnmClassScheduler.Repo.transaction(multi)
+    UnmClassScheduler.Repo.transaction(multi, timeout: 60_000)
   end
 end
