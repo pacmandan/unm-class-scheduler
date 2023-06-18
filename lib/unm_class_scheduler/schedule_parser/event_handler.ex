@@ -103,7 +103,7 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
   # Initial state should be passed into the parser, so
   # we should just have a function to call that runs the parser
   # with proper initial state.
-  defp init_state do
+  def init_state() do
     %{
       current_tags: %{},
       extracted: %{
