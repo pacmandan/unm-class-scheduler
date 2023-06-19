@@ -96,14 +96,15 @@ IO.puts("Inserting Delivery Types...")
 
 IO.puts("Inserting Instrucitonal Methods...")
 %{
-  "ENH" => "Web Enhanced"
-  "HYB" => "Hybrid"
-  "" => ""
-  "MOPS" => "Accelerated Online Programs"
-  "OL" => "Open Learning"
-  "ONL" => "Online"
+  "ENH" => "Web Enhanced",
+  "HYB" => "Hybrid",
+  "" => "",
+  "MOPS" => "Accelerated Online Programs",
+  "OL" => "Open Learning",
+  "ONL" => "Online",
 }
 # TODO: Insert these
 # FIXME: What do we do about the ones with empty string?
 
-UnmClassScheduler.testload()
+# UnmClassScheduler.testload()
+UnmClassScheduler.ScheduleParser.Updater.load_from_file("./xmls/current.xml")
