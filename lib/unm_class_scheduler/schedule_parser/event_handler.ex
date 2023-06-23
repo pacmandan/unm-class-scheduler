@@ -122,6 +122,7 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
         subjects: %{},
         courses: %{},
         sections: %{},
+        meeting_times: [],
       },
     }
   end
@@ -139,6 +140,7 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
   # <unmschedule>
   ##
   def handle_event(:start_element, {"unmschedule", _attributes}, state) do
+    # TODO: Keep this, since we might want to eventually use the "pubdate" attribute.
     {:ok, state}
   end
 
@@ -279,24 +281,6 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
   end
 
   ##
-  # <catalog-description>
-  ##
-  def handle_event(:start_element, {"catalog-description", _attributes}, %{current_tags: tags, extracted: ex}) do
-    new_state = %{
-      current_tags: add_current_tag(tags, :catalog_description, true),
-      extracted: ex
-    }
-    {:ok, new_state}
-  end
-
-  ##
-  # </catalog-description>
-  ##
-  def handle_event(:end_element, "catalog-description", %{current_tags: tags} = state) do
-    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :catalog_description))}
-  end
-
-  ##
   # <section>
   ##
   def handle_event(:start_element, {"section", attributes}, %{current_tags: tags, extracted: ex}) do
@@ -363,102 +347,36 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :waitlist))}
   end
 
-  # TODO: Unify these since they're all the same function.
-
   ##
-  # <section-title>
+  # <meeting-time>
   ##
-  def handle_event(:start_element, {"section-title", _attributes}, %{current_tags: tags, extracted: ex}) do
+  def handle_event(:start_element, {"meeting-time", _attributes}, %{current_tags: tags, extracted: ex}) do
     new_state = %{
-      current_tags: add_current_tag(tags, :section_title, true),
-      extracted: ex
+      current_tags: add_current_tag(tags, :meeting_time, true),
+      extracted: ex,
+      # Meeting times don't have a defined "code" we can use as a key.
+      # Build it as a separate item that can be appended to a list once we
+      # reach the end of the tag.
+      current_meeting_time: new_meeting_time(tags[:section], tags[:campus]),
     }
     {:ok, new_state}
   end
 
   ##
-  # </section-title>
+  # </meeting-time>
   ##
-  def handle_event(:end_element, "section-title", %{current_tags: tags} = state) do
-    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :section_title))}
-  end
-
-  ##
-  # <text>
-  ##
-  def handle_event(:start_element, {"text", _attributes}, %{current_tags: tags, extracted: ex}) do
+  def handle_event(:end_element, "meeting-time", %{current_tags: tags, extracted: ex, current_meeting_time: mt}) do
     new_state = %{
-      current_tags: add_current_tag(tags, :text, true),
-      extracted: ex
+      current_tags: delete_current_tag(tags, :meeting_time),
+      extracted: put_in(ex, [:meeting_times], [mt | ex[:meeting_times]]),
     }
     {:ok, new_state}
-  end
-
-  ##
-  # </text>
-  ##
-  def handle_event(:end_element, "text", %{current_tags: tags} = state) do
-    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :text))}
-  end
-
-  ##
-  # <fees>
-  ##
-  def handle_event(:start_element, {"fees", _attributes}, %{current_tags: tags, extracted: ex}) do
-    new_state = %{
-      current_tags: add_current_tag(tags, :fees, true),
-      extracted: ex
-    }
-    {:ok, new_state}
-  end
-
-  ##
-  # </fees>
-  ##
-  def handle_event(:end_element, "fees", %{current_tags: tags} = state) do
-    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :fees))}
-  end
-
-  ##
-  # <credits>
-  ##
-  def handle_event(:start_element, {"credits", _attributes}, %{current_tags: tags, extracted: ex}) do
-    new_state = %{
-      current_tags: add_current_tag(tags, :credits, true),
-      extracted: ex
-    }
-    {:ok, new_state}
-  end
-
-  ##
-  # </credits>
-  ##
-  def handle_event(:end_element, "credits", %{current_tags: tags} = state) do
-    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :credits))}
-  end
-
-  ##
-  # <crosslists>
-  ##
-  def handle_event(:start_element, {"crosslists", _attributes}, %{current_tags: tags, extracted: ex}) do
-    new_state = %{
-      current_tags: add_current_tag(tags, :crosslists, true),
-      extracted: ex
-    }
-    {:ok, new_state}
-  end
-
-  ##
-  # </crosslists>
-  ##
-  def handle_event(:end_element, "crosslists", %{current_tags: tags} = state) do
-    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :crosslists))}
   end
 
   ##
   # <bldg>
   ##
-  def handle_event(:start_element, {"bldg", attributes}, %{current_tags: tags, extracted: ex}) do
+  def handle_event(:start_element, {"bldg", attributes}, %{current_tags: tags, extracted: ex, current_meeting_time: mt}) do
     mattrs = Map.new(attributes)
     |> Map.merge(%{
       Campus => %{code: tags[:campus]}
@@ -475,14 +393,15 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
       ex
     else
       put_in(ex, [:buildings, "#{tags[:campus]}__#{mattrs["code"]}"], mattrs)
-      # TODO: This building ALSO needs to be added to the current meeting time.
-      # Which means we need to find unique keys for each meeting time.
-      # Or maybe store them under each :section, since they're not going to repeat?
     end
-
     new_state = %{
       current_tags: add_current_tag(tags, :building, mattrs["code"]),
-      extracted: new_extracted
+      extracted: new_extracted,
+      # We also need to attach this building to the current meeting time.
+      current_meeting_time: mt |> Map.merge(%{
+        # In this case, it's fine if the building code is "".
+        building: %{code: mattrs["code"], campus: tags[:campus]}
+      })
     }
     {:ok, new_state}
   end
@@ -494,9 +413,41 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :building))}
   end
 
+  # Simple tags with no attributes and no additional processing at start or end.
+  # (These usually contain text that the :characters event captures.)
+  %{
+    section_title: "section-title",
+    text: "text",
+    fees: "fees",
+    credits: "credits",
+    crosslists: "crosslists",
+    start_date: "start-date",
+    end_date: "end-date",
+    start_time: "start-time",
+    end_time: "end-time",
+    day: "day",
+    room: "room",
+    catalog_description: "catalog-description"
+  }
+  |> Enum.each(fn {key, element_name} ->
+    def handle_event(:start_element, {unquote(element_name), _attributes}, %{current_tags: tags} = state) do
+      {:ok, put_in(state, [:current_tags], add_current_tag(tags, unquote(key), true))}
+    end
+
+    def handle_event(:end_element, unquote(element_name), %{current_tags: tags} = state) do
+      {:ok, put_in(state, [:current_tags], delete_current_tag(tags, unquote(key)))}
+    end
+  end)
+
+  # TODO: Maybe we do this for all the :end_element events too?
+  # Since most of them are identical?
+
+  # Or we can loop these into the default handler?
+  # We'd need to either figure out how to translate "string-hyphenated"
+  # keys to :atomic_underscore keys, or just live with string keys.
+  # (Meaning we correct the Updater module too.)
+
   # Default element handlers
-  # Need more nuance here - internal elements to the ignored ones could mess up context/state
-  # Perhaps an "ignore" flag in the state when we hit something?
   def handle_event(:start_element, {_name, _attributes}, state) do
     {:ok, state}
   end
@@ -556,5 +507,19 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
   # FIXME: Move into a utils module
   defp rename_key(map, old_key, new_key) do
     with {v, m} <- Map.pop(map, old_key), do: Map.put(m, new_key, v)
+  end
+
+  defp new_meeting_time(section_crn, campus_code) do
+    %{
+      campus: %{code: campus_code},
+      section: %{crn: section_crn},
+      sunday: false,
+      monday: false,
+      tuesday: false,
+      wednesday: false,
+      thursday: false,
+      friday: false,
+      saturday: false,
+    }
   end
 end

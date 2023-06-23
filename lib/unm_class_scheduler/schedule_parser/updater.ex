@@ -114,7 +114,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   # Semester, Campus, College
   defp insert_coded_schema(attrs_to_insert, schema, cache_key_fn \\ &get_code/1) do
     fn repo, _cache ->
-      Enum.map(attrs_to_insert, fn {_, attrs} ->
+      Stream.map(attrs_to_insert, fn {_, attrs} ->
         struct(schema)
         |> schema.changeset(attrs)
         |> repo_insert(repo, schema.conflict_keys())
@@ -128,7 +128,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   # Department, Subject, Building, Course
   defp insert_linked_coded_schema(attrs_to_insert, schema, cache_key_fn \\ &get_code/2) do
     fn repo, cache ->
-      Enum.map(attrs_to_insert, fn {_, attrs} ->
+      Stream.map(attrs_to_insert, fn {_, attrs} ->
         with {parent_attrs, attrs} <- attrs |> Map.pop(schema.parent_module()),
           parent <- get_in(cache, [schema.parent_module(), parent_attrs[:code]])
         do
@@ -147,7 +147,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   # Section
   defp insert_section(attrs_to_insert) do
     fn repo, cache ->
-      Enum.map(attrs_to_insert, fn {_, attrs} ->
+      Stream.map(attrs_to_insert, fn {_, attrs} ->
         with {subject_attrs, attrs} <- attrs |> Map.pop(:subject),
           {course_attrs, attrs} <- attrs |> Map.pop(:course),
           {semester_attrs, attrs} <- attrs |> Map.pop(:semester),

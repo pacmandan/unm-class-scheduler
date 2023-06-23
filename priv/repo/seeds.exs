@@ -48,8 +48,7 @@ IO.puts("Inserting Parts of Term...")
   "SSP" => "Special Student Programs",
 }
 |> Stream.map(fn {code, name} -> %PartOfTerm{code: code, name: name} end)
-|> Stream.each(&Repo.insert!/1)
-|> Stream.run()
+|> Enum.each(&Repo.insert!/1)
 
 IO.puts("Inserting Statuses...")
 %{
@@ -62,8 +61,7 @@ IO.puts("Inserting Statuses...")
   "T" => "Cancelled/Reschedule w/Message",
 }
 |> Stream.map(fn {code, name} -> %Status{code: code, name: name} end)
-|> Stream.each(&Repo.insert!/1)
-|> Stream.run()
+|> Enum.each(&Repo.insert!/1)
 
 IO.puts("Inserting Delivery Types...")
 %{
