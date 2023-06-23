@@ -1,5 +1,5 @@
 defmodule UnmClassScheduler.Catalog.Semester do
-  use UnmClassScheduler.Schema
+  use UnmClassScheduler.Schema, conflict_keys: :code
 
   import Ecto.Changeset
 

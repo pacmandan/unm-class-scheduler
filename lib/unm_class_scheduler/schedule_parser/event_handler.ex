@@ -99,6 +99,13 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
   Anyway, thank you for coming to my TED Talk.
   """
 
+  alias UnmClassScheduler.Catalog.{
+    College,
+    Campus,
+    Department,
+    Subject,
+  }
+
   # TODO: This part should probably be moved.
   # Initial state should be passed into the parser, so
   # we should just have a function to call that runs the parser
@@ -109,6 +116,7 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
       extracted: %{
         semesters: %{},
         campuses: %{},
+        buildings: %{},
         colleges: %{},
         departments: %{},
         subjects: %{},
@@ -204,7 +212,7 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
   def handle_event(:start_element, {"department", attributes}, %{current_tags: tags, extracted: ex}) do
     mattrs = Map.new(attributes)
     |> Map.merge(%{
-      college: %{code: tags[:college]}
+      College => %{code: tags[:college]}
     })
 
     new_state = %{
@@ -227,7 +235,7 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
   def handle_event(:start_element, {"subject", attributes}, %{current_tags: tags, extracted: ex}) do
     mattrs = Map.new(attributes)
     |> Map.merge(%{
-      department: %{code: tags[:department]}
+      Department => %{code: tags[:department]}
     })
 
     new_state = %{
@@ -251,7 +259,7 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
   def handle_event(:start_element, {"course", attributes}, %{current_tags: tags, extracted: ex}) do
     mattrs = Map.new(attributes)
     |> Map.merge(%{
-      subject: %{code: tags[:subject]}
+      Subject => %{code: tags[:subject]}
     })
 
     course_key = build_course_key(tags[:subject], mattrs["number"])
@@ -447,6 +455,44 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
     {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :crosslists))}
   end
 
+  ##
+  # <bldg>
+  ##
+  def handle_event(:start_element, {"bldg", attributes}, %{current_tags: tags, extracted: ex}) do
+    mattrs = Map.new(attributes)
+    |> Map.merge(%{
+      Campus => %{code: tags[:campus]}
+    })
+
+    new_extracted = if mattrs["code"] == "" do
+      # Some meeting times have no building listed.
+      # I think these are just "closed" but not actually closed?
+      # Or maybe it has something to do with it being the current semester?
+      # All of the ones I found with this case had "enrollment: 0",
+      # and max enrollment > 0. Which is weird.
+
+      # In this case, just skip it?
+      ex
+    else
+      put_in(ex, [:buildings, "#{tags[:campus]}__#{mattrs["code"]}"], mattrs)
+      # TODO: This building ALSO needs to be added to the current meeting time.
+      # Which means we need to find unique keys for each meeting time.
+      # Or maybe store them under each :section, since they're not going to repeat?
+    end
+
+    new_state = %{
+      current_tags: add_current_tag(tags, :building, mattrs["code"]),
+      extracted: new_extracted
+    }
+    {:ok, new_state}
+  end
+
+  ##
+  # </bldg>
+  ##
+  def handle_event(:end_element, "bldg", %{current_tags: tags} = state) do
+    {:ok, put_in(state, [:current_tags], delete_current_tag(tags, :building))}
+  end
 
   # Default element handlers
   # Need more nuance here - internal elements to the ignored ones could mess up context/state
@@ -481,6 +527,8 @@ defmodule UnmClassScheduler.ScheduleParser.EventHandler do
         # But some credits are listed as "1 TO 6".
         # Split credits into min and max, maybe?
         put_in(ex, [:sections, crn, "credits"], chars)
+      %{building: building_code, campus: campus_code} ->
+        put_in(ex, [:buildings, "#{campus_code}__#{building_code}", "name"], chars)
       # Unknown state, return ex as is.
       _ -> ex
     end

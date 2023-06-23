@@ -1,10 +1,12 @@
 defmodule UnmClassScheduler.Catalog.Course do
-  use UnmClassScheduler.Schema
-
   alias UnmClassScheduler.Catalog.{
     Subject,
     Section
   }
+
+  use UnmClassScheduler.Schema, conflict_keys: [:number, :subject_uuid]
+  use UnmClassScheduler.Schema.Parent, child: :sections
+  use UnmClassScheduler.Schema.Child, parent: Subject
 
   import Ecto.Changeset
 

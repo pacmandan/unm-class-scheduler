@@ -1,5 +1,6 @@
 defmodule UnmClassScheduler.Catalog.College do
-  use UnmClassScheduler.Schema
+  use UnmClassScheduler.Schema, conflict_keys: :code
+  use UnmClassScheduler.Schema.Parent, child: :departments
 
   alias UnmClassScheduler.Catalog.{Department}
 

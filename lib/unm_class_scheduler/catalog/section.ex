@@ -1,12 +1,12 @@
 defmodule UnmClassScheduler.Catalog.Section do
-  use UnmClassScheduler.Schema
-
   alias UnmClassScheduler.Catalog.{
     Semester,
     Course,
     PartOfTerm,
     Status,
   }
+
+  use UnmClassScheduler.Schema, conflict_keys: [:crn, :semester_uuid]
 
   import Ecto.Changeset
 

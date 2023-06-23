@@ -1,5 +1,5 @@
 defmodule UnmClassScheduler.Catalog.Status do
-  use UnmClassScheduler.Schema
+  use UnmClassScheduler.Schema, conflict_keys: :code
 
   schema "statuses" do
     field :code, :string

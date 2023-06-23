@@ -4,6 +4,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   alias UnmClassScheduler.Catalog.{
     Semester,
     Campus,
+    Building,
     College,
     Department,
     Subject,
@@ -21,51 +22,48 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
     mass_insert(extracted)
   end
 
-  @type multi_state :: %{
-    optional(atom()) => schema_cache()
-  }
-
-  @type schema_cache :: %{
-    optional(binary()) => struct()
-  }
-
-  def mass_insert(schemas) do
+  def mass_insert(extracted_attrs) do
     Ecto.Multi.new()
     |> Ecto.Multi.run(
-      :part_of_term,
+      :parts_of_term,
       fetch_coded_and_cache_all(PartOfTerm)
     )
     |> Ecto.Multi.run(
-      :status,
+      :statuses,
       fetch_coded_and_cache_all(Status)
     )
     |> Ecto.Multi.run(
-      :semester,
-      insert_coded_schema(schemas[:semesters], Semester)
+      Semester,
+      insert_coded_schema(extracted_attrs[:semesters], Semester)
     )
     |> Ecto.Multi.run(
-      :campus,
-      insert_coded_schema(schemas[:campuses], Campus)
+      Campus,
+      insert_coded_schema(extracted_attrs[:campuses], Campus)
     )
     |> Ecto.Multi.run(
-      :college,
-      insert_coded_schema(schemas[:colleges], College)
+      Building,
+      insert_linked_coded_schema(extracted_attrs[:buildings], Building, &building_key/2)
     )
     |> Ecto.Multi.run(
-      :department,
-      insert_linked_coded_schema(schemas[:departments], Department, :departments, :college)
+      College,
+      insert_coded_schema(extracted_attrs[:colleges], College)
     )
     |> Ecto.Multi.run(
-      :subject,
-      insert_linked_coded_schema(schemas[:subjects], Subject, :subjects, :department)
+      Department,
+      insert_linked_coded_schema(extracted_attrs[:departments], Department)
     )
     |> Ecto.Multi.run(
-      :course,
-      insert_courses(schemas[:courses])
+      Subject,
+      insert_linked_coded_schema(extracted_attrs[:subjects], Subject)
     )
     |> Ecto.Multi.run(
-      :section,
-      insert_section(schemas[:sections])
+      Course,
+      insert_linked_coded_schema(extracted_attrs[:courses], Course, &course_key/2)
+      #insert_courses(extracted_attrs[:courses])
+    )
+    |> Ecto.Multi.run(
+      Section,
+      insert_section(extracted_attrs[:sections])
     )
     |> Repo.transaction(timeout: 60_000)
   end
@@ -89,49 +87,56 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
     end
   end
 
+  defp get_code(i) do
+    i.code
+  end
+
+  defp get_code(i, _p) do
+    i.code
+  end
+
+  defp building_key(building, campus) do
+    building_code(campus.code, building.code)
+  end
+
+  defp course_key(course, subject) do
+    course_code(subject.code, course.number)
+  end
+
+  defp course_code(subject_code, course_number) do
+    "#{subject_code}__#{course_number}"
+  end
+
+  defp building_code(campus_code, building_code) do
+    "#{campus_code}__#{building_code}"
+  end
+
   # Semester, Campus, College
-  defp insert_coded_schema(attrs_to_insert, schema) do
+  defp insert_coded_schema(attrs_to_insert, schema, cache_key_fn \\ &get_code/1) do
     fn repo, _cache ->
       Enum.map(attrs_to_insert, fn {_, attrs} ->
         struct(schema)
         |> schema.changeset(attrs)
-        |> repo_insert(repo, :code)
-        |> (&({&1.code, &1})).()
+        |> repo_insert(repo, schema.conflict_keys())
+        |> (&({cache_key_fn.(&1), &1})).()
       end)
       |> Enum.into(%{})
       |> (&({:ok, &1})).()
     end
   end
 
-  # Department, Subject
-  defp insert_linked_coded_schema(attrs_to_insert, schema, child_key, parent_attrs_key) do
+  # Department, Subject, Building, Course
+  defp insert_linked_coded_schema(attrs_to_insert, schema, cache_key_fn \\ &get_code/2) do
     fn repo, cache ->
       Enum.map(attrs_to_insert, fn {_, attrs} ->
-        with {parent_attrs, attrs} <- attrs |> Map.pop(parent_attrs_key),
-          parent <- get_in(cache, [parent_attrs_key, parent_attrs[:code]])
+        with {parent_attrs, attrs} <- attrs |> Map.pop(schema.parent_module()),
+          parent <- get_in(cache, [schema.parent_module(), parent_attrs[:code]])
         do
-          Ecto.build_assoc(parent, child_key)
+          parent
+          |> schema.parent_module().new_child()
           |> schema.changeset(attrs)
-          |> repo_insert(repo, :code)
-          |> (&({&1.code, &1})).()
-        end
-      end)
-      |> Enum.into(%{})
-      |> (&({:ok, &1})).()
-    end
-  end
-
-  # Course
-  defp insert_courses(attrs_to_insert) do
-    fn repo, cache ->
-      Enum.map(attrs_to_insert, fn {_, attrs} ->
-        with {subject_attrs, attrs} <- attrs |> Map.pop(:subject),
-          subject <- get_in(cache, [:subject, subject_attrs[:code]])
-        do
-          Ecto.build_assoc(subject, :courses)
-          |> Course.changeset(attrs)
-          |> repo_insert(repo, [:subject_uuid, :number])
-          |> (&({"#{subject.code}__#{&1.number}", &1})).()
+          |> repo_insert(repo, schema.conflict_keys())
+          |> (&({cache_key_fn.(&1, parent), &1})).()
         end
       end)
       |> Enum.into(%{})
@@ -148,15 +153,13 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
           {semester_attrs, attrs} <- attrs |> Map.pop(:semester),
           {part_of_term_code, attrs} <- attrs |> Map.pop("part_of_term"),
           {status_code, attrs} <- attrs |> Map.pop("status"),
-          course <- get_in(cache, [:course, "#{subject_attrs[:code]}__#{course_attrs[:number]}"]),
-          semester <- get_in(cache, [:semester, semester_attrs[:code]]),
-          part_of_term <- get_in(cache, [:part_of_term, part_of_term_code]),
-          # part_of_term <- repo.get_by(PartOfTerm, code: part_of_term_code),
-          status <- get_in(cache, [:status, status_code])
-          # status <- repo.get_by(Status, code: status_code)
+          course <- get_in(cache, [Course, course_code(subject_attrs[:code], course_attrs[:number])]),
+          semester <- get_in(cache, [Semester, semester_attrs[:code]]),
+          part_of_term <- get_in(cache, [:parts_of_term, part_of_term_code]),
+          status <- get_in(cache, [:statuses, status_code])
         do
           Section.create_section(attrs, course, semester, part_of_term, status)
-          |> repo_insert(repo, [:crn, :semester_uuid])
+          |> repo_insert(repo, Section.conflict_keys())
           |> (&({&1.crn, &1})).()
         end
       end)

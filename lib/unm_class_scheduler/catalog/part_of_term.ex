@@ -1,5 +1,5 @@
 defmodule UnmClassScheduler.Catalog.PartOfTerm do
-  use UnmClassScheduler.Schema
+  use UnmClassScheduler.Schema, conflict_keys: :code
 
   schema "parts_of_term" do
     field :code, :string
