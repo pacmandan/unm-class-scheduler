@@ -1,6 +1,7 @@
 defmodule UnmClassScheduler.ScheduleParser.Updater do
   alias UnmClassScheduler.Repo
-  alias UnmClassScheduler.ScheduleParser.EventHandler
+  #alias UnmClassScheduler.ScheduleParser.EventHandler
+  alias UnmClassScheduler.ScheduleParser.TestEventHandler
   alias UnmClassScheduler.Catalog.{
     Semester,
     Campus,
@@ -18,7 +19,9 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
 
   def load_from_file(filename) do
     stream = File.stream!(Path.expand(filename))
-    {:ok, extracted} = Saxy.parse_stream(stream, EventHandler, %{})
+    #{:ok, extracted} = Saxy.parse_stream(stream, EventHandler, %{})
+    {:ok, extracted} = Saxy.parse_stream(stream, TestEventHandler, %{})
+
     mass_insert(extracted)
   end
 
@@ -34,36 +37,38 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
     )
     |> Ecto.Multi.run(
       Semester,
-      insert_coded_schema(extracted_attrs[:semesters], Semester)
+      insert_coded_schema(extracted_attrs[Semester], Semester)
+      #insert_coded_schema(extracted_attrs[:semesters], Semester)
     )
     |> Ecto.Multi.run(
       Campus,
-      insert_coded_schema(extracted_attrs[:campuses], Campus)
+      insert_coded_schema(extracted_attrs[Campus], Campus)
+      #insert_coded_schema(extracted_attrs[:campuses], Campus)
     )
     |> Ecto.Multi.run(
       Building,
-      insert_linked_coded_schema(extracted_attrs[:buildings], Building, &building_key/2)
+      insert_linked_coded_schema(extracted_attrs[Building], Building, &building_key/2)
     )
     |> Ecto.Multi.run(
       College,
-      insert_coded_schema(extracted_attrs[:colleges], College)
+      insert_coded_schema(extracted_attrs[College], College)
     )
     |> Ecto.Multi.run(
       Department,
-      insert_linked_coded_schema(extracted_attrs[:departments], Department)
+      insert_linked_coded_schema(extracted_attrs[Department], Department)
     )
     |> Ecto.Multi.run(
       Subject,
-      insert_linked_coded_schema(extracted_attrs[:subjects], Subject)
+      insert_linked_coded_schema(extracted_attrs[Subject], Subject)
     )
     |> Ecto.Multi.run(
       Course,
-      insert_linked_coded_schema(extracted_attrs[:courses], Course, &course_key/2)
+      insert_linked_coded_schema(extracted_attrs[Course], Course, &course_key/2)
       #insert_courses(extracted_attrs[:courses])
     )
     |> Ecto.Multi.run(
       Section,
-      insert_section(extracted_attrs[:sections])
+      insert_section(extracted_attrs[Section])
     )
     |> Repo.transaction(timeout: 60_000)
   end
@@ -114,7 +119,8 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   # Semester, Campus, College
   defp insert_coded_schema(attrs_to_insert, schema, cache_key_fn \\ &get_code/1) do
     fn repo, _cache ->
-      Stream.map(attrs_to_insert, fn {_, attrs} ->
+      #Stream.map(attrs_to_insert, fn {_, attrs} ->
+      Stream.map(attrs_to_insert, fn attrs ->
         struct(schema)
         |> schema.changeset(attrs)
         |> repo_insert(repo, schema.conflict_keys())
@@ -128,9 +134,10 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   # Department, Subject, Building, Course
   defp insert_linked_coded_schema(attrs_to_insert, schema, cache_key_fn \\ &get_code/2) do
     fn repo, cache ->
-      Stream.map(attrs_to_insert, fn {_, attrs} ->
+      # Stream.map(attrs_to_insert, fn {_, attrs} ->
+      Stream.map(attrs_to_insert, fn attrs ->
         with {parent_attrs, attrs} <- attrs |> Map.pop(schema.parent_module()),
-          parent <- get_in(cache, [schema.parent_module(), parent_attrs[:code]])
+          parent <- get_in(cache, [schema.parent_module(), parent_attrs["code"]])
         do
           parent
           |> schema.parent_module().new_child()
@@ -147,14 +154,15 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   # Section
   defp insert_section(attrs_to_insert) do
     fn repo, cache ->
-      Stream.map(attrs_to_insert, fn {_, attrs} ->
-        with {subject_attrs, attrs} <- attrs |> Map.pop(:subject),
-          {course_attrs, attrs} <- attrs |> Map.pop(:course),
-          {semester_attrs, attrs} <- attrs |> Map.pop(:semester),
+      # Stream.map(attrs_to_insert, fn {_, attrs} ->
+      Stream.map(attrs_to_insert, fn attrs ->
+        with {subject_attrs, attrs} <- attrs |> Map.pop(Subject),
+          {course_attrs, attrs} <- attrs |> Map.pop(Course),
+          {semester_attrs, attrs} <- attrs |> Map.pop(Semester),
           {part_of_term_code, attrs} <- attrs |> Map.pop("part_of_term"),
           {status_code, attrs} <- attrs |> Map.pop("status"),
-          course <- get_in(cache, [Course, course_code(subject_attrs[:code], course_attrs[:number])]),
-          semester <- get_in(cache, [Semester, semester_attrs[:code]]),
+          course <- get_in(cache, [Course, course_code(subject_attrs["code"], course_attrs["number"])]),
+          semester <- get_in(cache, [Semester, semester_attrs["code"]]),
           part_of_term <- get_in(cache, [:parts_of_term, part_of_term_code]),
           status <- get_in(cache, [:statuses, status_code])
         do

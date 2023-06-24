@@ -37,10 +37,21 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
     {:ok, init_state()}
   end
 
-  def handle_event(:end_document, _data, state) do
+  def handle_event(:end_document, _data, %{completed: completed}) do
     # Return the extracted keys
-    # TODO: Should we return the whole state, if we're feeding one into another?
-    {:ok, state[:completed]}
+    new_completed = %{
+      Semester => (completed[Semester] |> Enum.uniq_by((&(&1["code"])))),
+      Campus => (completed[Campus] |> Enum.uniq_by((&(&1["code"])))),
+      Building => completed[Building]
+        |> Enum.reject((&(&1["code"] == "")))
+        |> Enum.uniq_by((&({&1["code"], &1[Campus]["code"]}))),
+      College => completed[College] |> Enum.uniq_by((&(&1["code"]))),
+      Department => completed[Department] |> Enum.uniq_by((&(&1["code"]))),
+      Subject => completed[Subject] |> Enum.uniq_by((&(&1["code"]))),
+      Course => completed[Course] |> Enum.uniq_by((&({&1["number"], &1[Subject]["code"]}))),
+      Section => completed[Section] |> Enum.uniq_by((&({&1["crn"], &1[Semester]["code"]}))),
+    }
+    {:ok, new_completed}
   end
 
   # New plan (tentative):
@@ -69,7 +80,7 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
     "college" => College,
     "department" => Department,
     "subject" => Subject,
-    "building" => Building,
+    "bldg" => Building,
     "course" => Course,
     "section" => Section,
     "catalog-description" => :catalog_description,
@@ -110,6 +121,10 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
       Course ->
         update_current(current, @accepted_tags[tag],
           mattrs |> Map.merge(%{Subject => Map.take(current[Subject], ["code"])}))
+      :catalog_description ->
+        update_current(current, @accepted_tags[tag], true)
+      :crosslists ->
+        update_current(current, @accepted_tags[tag], true)
       Section ->
         if current[:crosslists] do
           current
@@ -125,12 +140,12 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
         end
       :enrollment ->
         current
-        |> update_current(Section, %{enrollment_max: mattrs["max"]})
-        |> update_current(:enrollment, true)
+        |> update_current(Section, %{"enrollment_max" => mattrs["max"]})
+        |> update_current(@accepted_tags[tag], true)
       :waitlist ->
         current
-        |> update_current(Section, %{waitlist_max: mattrs["max"]})
-        |> update_current(:waitlist, true)
+        |> update_current(Section, %{"waitlist_max" => mattrs["max"]})
+        |> update_current(@accepted_tags[tag], true)
       _ ->
         current
     end
@@ -144,6 +159,7 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
   def handle_event(:end_element, tag, %{current: current, completed: completed})
     when tag in @accepted_keys do
     {new_completed, new_current} = case Map.pop(current, @accepted_tags[tag]) do
+      {nil, current} -> {completed, current}
       # If this is not a tag that produces a thing, just pop it off of current.
       {true, current} -> {completed, current}
       # If this IS a new element, push it into completed.
@@ -155,6 +171,15 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
       completed: new_completed,
     }
     {:ok, new_state}
+  end
+
+  # Default element handlers
+  def handle_event(:start_element, {_name, _attributes}, state) do
+    {:ok, state}
+  end
+
+  def handle_event(:end_element, _name, state) do
+    {:ok, state}
   end
 
   def handle_event(:characters, chars, %{current: current, completed: completed}) do
@@ -191,7 +216,7 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
   end
 
   defp update_current(current, type, updates) when is_map(updates) do
-    updated = Map.merge(current[type], updates)
+    updated = Map.merge(current[type] || %{}, updates)
     Map.put(current, type, updated)
   end
 
