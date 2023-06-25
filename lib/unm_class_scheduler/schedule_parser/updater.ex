@@ -119,7 +119,6 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   # Semester, Campus, College
   defp insert_coded_schema(attrs_to_insert, schema, cache_key_fn \\ &get_code/1) do
     fn repo, _cache ->
-      #Stream.map(attrs_to_insert, fn {_, attrs} ->
       Stream.map(attrs_to_insert, fn attrs ->
         struct(schema)
         |> schema.changeset(attrs)
@@ -134,7 +133,6 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   # Department, Subject, Building, Course
   defp insert_linked_coded_schema(attrs_to_insert, schema, cache_key_fn \\ &get_code/2) do
     fn repo, cache ->
-      # Stream.map(attrs_to_insert, fn {_, attrs} ->
       Stream.map(attrs_to_insert, fn attrs ->
         with {parent_attrs, attrs} <- attrs |> Map.pop(schema.parent_module()),
           parent <- get_in(cache, [schema.parent_module(), parent_attrs["code"]])
@@ -159,7 +157,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
         with {subject_attrs, attrs} <- attrs |> Map.pop(Subject),
           {course_attrs, attrs} <- attrs |> Map.pop(Course),
           {semester_attrs, attrs} <- attrs |> Map.pop(Semester),
-          {part_of_term_code, attrs} <- attrs |> Map.pop("part_of_term"),
+          {part_of_term_code, attrs} <- attrs |> Map.pop("part-of-term"),
           {status_code, attrs} <- attrs |> Map.pop("status"),
           course <- get_in(cache, [Course, course_code(subject_attrs["code"], course_attrs["number"])]),
           semester <- get_in(cache, [Semester, semester_attrs["code"]]),

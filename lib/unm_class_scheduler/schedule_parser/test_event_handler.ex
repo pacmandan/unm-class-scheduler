@@ -43,6 +43,7 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
       Semester => (completed[Semester] |> Enum.uniq_by((&(&1["code"])))),
       Campus => (completed[Campus] |> Enum.uniq_by((&(&1["code"])))),
       Building => completed[Building]
+        # TODO: Try a comprehension here
         |> Enum.reject((&(&1["code"] == "")))
         |> Enum.uniq_by((&({&1["code"], &1[Campus]["code"]}))),
       College => completed[College] |> Enum.uniq_by((&(&1["code"]))),
@@ -86,7 +87,7 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
     "catalog-description" => :catalog_description,
     "enrollment" => :enrollment,
     "waitlist" => :waitlist,
-    "section-title" => :section_title,
+    "section-title" => :title,
     "text" => :text,
     "fees" => :fees,
     "credits" => :credits,
@@ -135,7 +136,7 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
               Course => Map.take(current[Course], ["number"]),
               Semester => Map.take(current[Semester], ["code"]),
             })
-            |> rename_key("part-of-term", "part_of_term")
+            #|> rename_key("part-of-term", "part_of_term")
           )
         end
       :enrollment ->
@@ -146,7 +147,15 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
         current
         |> update_current(Section, %{"waitlist_max" => mattrs["max"]})
         |> update_current(@accepted_tags[tag], true)
-      _ ->
+      :fees ->
+        update_current(current, @accepted_tags[tag], true)
+      :text ->
+        update_current(current, @accepted_tags[tag], true)
+      :title ->
+        update_current(current, @accepted_tags[tag], true)
+      :credits ->
+        update_current(current, @accepted_tags[tag], true)
+        _ ->
         current
     end
     new_state = %{
@@ -190,8 +199,10 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
         update_current(current, Section, %{"enrollment" => chars})
       %{Section => _section, waitlist: true} ->
         update_current(current, Section, %{"waitlist" => chars})
-      %{Section => _section, section_title: true} ->
+      %{Section => _section, title: true} ->
         update_current(current, Section, %{"title" => chars})
+      %{Section => _section, text: true} ->
+        update_current(current, Section, %{"text" => chars})
       %{Section => _section, fees: true} ->
         {fee, _} = Float.parse(chars)
         update_current(current, Section, %{"fees" => fee})

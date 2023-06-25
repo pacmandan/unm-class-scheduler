@@ -4,6 +4,7 @@ defmodule UnmClassScheduler.Catalog.Section do
     Course,
     PartOfTerm,
     Status,
+    MeetingTime,
   }
 
   use UnmClassScheduler.Schema, conflict_keys: [:crn, :semester_uuid]
@@ -28,12 +29,14 @@ defmodule UnmClassScheduler.Catalog.Section do
     belongs_to :semester, Semester, references: :uuid, foreign_key: :semester_uuid
     belongs_to :course, Course, references: :uuid, foreign_key: :course_uuid
 
+    has_many :meeting_times, MeetingTime, references: :uuid, foreign_key: :section_uuid
+
     timestamps()
   end
 
   def create_section(attrs, course, semester, part_of_term, status) do
     Ecto.build_assoc(course, :sections)
-    |> cast(attrs, [:crn, :number])
+    |> cast(attrs, [:crn, :number, :enrollment, :enrollment_max, :waitlist, :waitlist_max, :credits, :fees, :text, :title])
     |> put_assoc(:semester, semester)
     |> put_assoc(:part_of_term, part_of_term)
     |> put_assoc(:status, status)
