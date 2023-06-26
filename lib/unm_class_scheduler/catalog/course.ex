@@ -28,6 +28,24 @@ defmodule UnmClassScheduler.Catalog.Course do
     |> unique_constraint([:number, :subject_uuid])
   end
 
+  def validate(params, subject) do
+    data = %{}
+    types = %{number: :string, title: :string, catalog_description: :string, subject_uuid: :string}
+    cs = {data, types}
+    |> cast(params |> Map.merge(%{subject_uuid: subject.uuid}), [:number, :title, :catalog_description, :subject_uuid])
+    |> validate_required([:number, :title])
+
+    if cs.valid? do
+      {:ok, apply_changes(cs)}
+    else
+      {:error, cs.errors}
+    end
+  end
+
+  def parent_key(), do: :subject
+
+  def parent(course), do: course.subject
+
   # Proposed view for finding courses by number and subject.
   # I'll wait to implement this until we start getting into the search API.
   # It might not be necessary and/or worsen performance, I don't know yet.

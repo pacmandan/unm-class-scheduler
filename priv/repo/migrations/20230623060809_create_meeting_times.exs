@@ -5,6 +5,7 @@ defmodule UnmClassScheduler.Repo.Migrations.CreateMeetingTimes do
     create table(:meeting_times, primary_key: false) do
       add :uuid, :uuid, primary_key: true
       add :section_uuid, references(:sections, column: :uuid, type: :uuid), null: false
+      add :index, :integer, null: false
       add :start_date, :date
       add :end_date, :date
       add :start_time, :time
@@ -24,15 +25,7 @@ defmodule UnmClassScheduler.Repo.Migrations.CreateMeetingTimes do
 
     create unique_index(:meeting_times, [
       :section_uuid,
-      :start_time,
-      :end_time,
-      :sunday,
-      :monday,
-      :tuesday,
-      :wednesday,
-      :thursday,
-      :friday,
-      :saturday,
+      :index,
     ])
   end
 end

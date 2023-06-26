@@ -21,4 +21,18 @@ defmodule UnmClassScheduler.Catalog.Campus do
     |> validate_required([:code, :name])
     |> unique_constraint(:code)
   end
+
+  def validate(params) do
+    data = %{}
+    types = %{code: :string, name: :string}
+    cs = {data, types}
+    |> cast(params, [:code, :name])
+    |> validate_required([:code, :name])
+
+    if cs.valid? do
+      {:ok, apply_changes(cs)}
+    else
+      {:error, cs.errors}
+    end
+  end
 end

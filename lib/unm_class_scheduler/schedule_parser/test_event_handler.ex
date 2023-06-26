@@ -55,25 +55,59 @@ defmodule UnmClassScheduler.ScheduleParser.TestEventHandler do
     {:ok, new_completed}
   end
 
-  # New plan (tentative):
-  # - Extract:  Pull everything raw from the XML. Don't worry about duplicates.
-  #             The only thing each tag needs to know about is its parents, which are in "current".
-  # - Validate: Go through each extracted element and validate it. If values are missing
-  #             or inconsistent, reject it.
-  #             This may be the point where we want to package everything into schemas?
-  # - Dedup:    Ensure only one of each unique element is taken. Instructors and buildings
-  #             are going to be the worst offenders here.
+  @doc """
+  Planned steps
+  * Extract - Extraction module, Saxy parser.
+              Returns _exactly_ what's in the document, not deduped, verified, or filtered.
+              However, it IS in a structured format. String keys for fields.
 
-  # TODO: Should we dedup _first_, before validation?
-  # A lot of validation can be held directly in the schemas.
-  # But the problem is that some schemas rely on others to _already_ exist.
-  # Maybe we do these steps individually?
-  # i.e. Extract _everything_
-  # Then validate, dedup, and insert all semesters,
-  # Then validate, dedup, and insert all campuses,
-  # Etc.
-  # In that case, the "validate" step can produce a schema, since it can use
-  # previously inserted steps as the basis for validation.
+  * Dedup   - Each element is deduped based on that elements uniqueness criteria.
+
+  * Verify  - Each element is verified, filtered, and converted to atomic keys.
+              Any invalid elements are discarded.
+
+  * Link & Insert
+            - Each element is inserted into the repository. If an association UUID is required,
+              it is obtained from previous steps before inserting.
+
+
+  I think one of the big questions I'm struggling with is this:
+  Should the extraction module worry about anything _other than_ extracting?
+  On the one one hand, separation of concerns. We can separate extraction from dedup/validation pretty cleanly.
+  On the other hand, this extraction module is _already_ pulling into various structures and has to know which values to
+  pull at each level. (e.g. It should know to keep the courses parent subject for each course, not just the course attributes.)
+  On the other other hand, this extraction will never be complete since we need the parent UUID, not just the parent code.
+  So we can't fully verify until we get there.
+  On the other other _other_ hand, we don't _NEED_ UUIDs as primary keys. It might fix a lot of issues if we just use the provided
+  codes as primary keys. However, this might introduce some problems, since things like course don't have unique keys unto themselves,
+  and things like Building have duplicate codes. (So we can't fully rely on these to be unique in all cases.)
+
+  The extraction module should extract and dedup, but not Changeset verify.
+  It should contain an initializer function that takes a list of file names to extract from.
+  Once all files have been extracted (maybe in parallel?) the results are combined and deduped before being returned.
+  Keys will remain as strings, we're not going to worry about verifying missing or invalid keys, etc.
+  Associations will include atomic key codes as references.
+  Maybe we do this as a distinct key in each one, rather than naming the association?
+
+  i.e. Instead of
+  department = %{
+    "code" => "AB",
+    "name" => "Test Department",
+    College => %{code: => "CD"},
+  }
+  it could be
+  department = %{
+    fields: %{
+      "code" => "AB",
+      "name" => "Test Department",
+    },
+    associations: %{
+      College => %{code: "CD"}
+    }
+  }
+
+  If we separate :fields from :associations, it would make the attribute list cleaner for using Changesets.
+  """
 
   @accepted_tags %{
     "semester" => Semester,

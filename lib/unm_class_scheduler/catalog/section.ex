@@ -43,4 +43,40 @@ defmodule UnmClassScheduler.Catalog.Section do
     |> validate_required([:crn, :number, :course_uuid, :semester])
     |> unique_constraint([:crn, :course_uuid, :semester])
   end
+
+  def validate(params, course, semester, part_of_term, status) do
+    data = %{}
+    types = %{
+      crn: :string,
+      number: :string,
+      title: :string,
+      enrollment: :integer,
+      enrollment_max: :integer,
+      waitlist: :integer,
+      waitlist_max: :integer,
+      credits: :string,
+      fees: :float,
+      text: :string,
+      course_uuid: :string,
+      semester_uuid: :string,
+      part_of_term_uuid: :string,
+      status_uuid: :string,
+    }
+    all_params = params
+    |> Map.merge(%{
+      course_uuid: course.uuid,
+      semester_uuid: semester.uuid,
+      part_of_term_uuid: part_of_term.uuid,
+      status_uuid: status.uuid
+    })
+    cs = {data, types}
+    |> cast(all_params, Map.keys(types))
+    |> validate_required([:crn, :number, :course_uuid, :semester_uuid])
+
+    if cs.valid? do
+      {:ok, apply_changes(cs)}
+    else
+      {:error, cs.errors}
+    end
+  end
 end

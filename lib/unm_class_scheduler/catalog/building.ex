@@ -23,4 +23,22 @@ defmodule UnmClassScheduler.Catalog.Building do
     |> validate_required([:code, :name])
     |> unique_constraint(:code)
   end
+
+  def validate(params, campus) do
+    data = %{}
+    types = %{code: :string, name: :string, campus_uuid: :string}
+    cs = {data, types}
+    |> cast(params |> Map.merge(%{campus_uuid: campus.uuid}), [:code, :name, :campus_uuid])
+    |> validate_required([:code, :name])
+
+    if cs.valid? do
+      {:ok, apply_changes(cs)}
+    else
+      {:error, cs.errors}
+    end
+  end
+
+  def parent_key(), do: :campus
+
+  def parent(building), do: building.campus
 end
