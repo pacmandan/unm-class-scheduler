@@ -1,12 +1,13 @@
 defmodule UnmClassScheduler.Catalog.Building do
-  alias UnmClassScheduler.Catalog.{
-    Campus,
-  }
+  @behaviour UnmClassScheduler.Schema.Validatable
+  @behaviour UnmClassScheduler.Schema.HasConflicts
+  @behaviour UnmClassScheduler.Schema.Child
 
-  use UnmClassScheduler.Schema, conflict_keys: [:code, :campus_uuid]
-  use UnmClassScheduler.Schema.Child, parent: Campus
+  use UnmClassScheduler.Schema
 
   import Ecto.Changeset
+
+  alias UnmClassScheduler.Catalog.Campus
 
   schema "buildings" do
     field :code, :string
@@ -17,14 +18,8 @@ defmodule UnmClassScheduler.Catalog.Building do
     timestamps()
   end
 
-  def changeset(building, attrs) do
-    building
-    |> cast(attrs, [:code, :name])
-    |> validate_required([:code, :name])
-    |> unique_constraint(:code)
-  end
-
-  def validate(params, campus) do
+  @impl true
+  def validate_data(params, campus: campus) do
     data = %{}
     types = %{code: :string, name: :string, campus_uuid: :string}
     cs = {data, types}
@@ -38,7 +33,15 @@ defmodule UnmClassScheduler.Catalog.Building do
     end
   end
 
+  @impl true
+  def parent_module(), do: Campus
+
+  @impl true
   def parent_key(), do: :campus
 
-  def parent(building), do: building.campus
+  @impl true
+  def get_parent(building), do: building.campus
+
+  @impl true
+  def conflict_keys(), do: [:code, :campus_uuid]
 end

@@ -1,9 +1,12 @@
 defmodule UnmClassScheduler.Catalog.Crosslist do
-  use UnmClassScheduler.Schema, conflict_keys: [:section_uuid, :crosslist_uuid]
+  @behaviour UnmClassScheduler.Schema.Validatable
+  @behaviour UnmClassScheduler.Schema.HasConflicts
 
-  alias UnmClassScheduler.Catalog.Section
+  use UnmClassScheduler.Schema
 
   import Ecto.Changeset
+
+  alias UnmClassScheduler.Catalog.Section
 
   schema "crosslists" do
     belongs_to :section, Section, references: :uuid, foreign_key: :section_uuid
@@ -12,7 +15,8 @@ defmodule UnmClassScheduler.Catalog.Crosslist do
     timestamps()
   end
 
-  def validate(params, section, crosslist) do
+  @impl true
+  def validate_data(params, section: %Section{} = section, crosslist: crosslist) do
     data = %{}
     types = %{
       section_uuid: :string,
@@ -54,4 +58,7 @@ defmodule UnmClassScheduler.Catalog.Crosslist do
         true
     end
   end
+
+  @impl true
+  def conflict_keys(), do: [:section_uuid, :crosslist_uuid]
 end

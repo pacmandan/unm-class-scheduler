@@ -1,10 +1,12 @@
 defmodule UnmClassScheduler.Catalog.College do
-  use UnmClassScheduler.Schema, conflict_keys: :code
-  use UnmClassScheduler.Schema.Parent, child: :departments
+  @behaviour UnmClassScheduler.Schema.Validatable
+  @behaviour UnmClassScheduler.Schema.HasConflicts
 
-  alias UnmClassScheduler.Catalog.{Department}
+  use UnmClassScheduler.Schema
 
   import Ecto.Changeset
+
+  alias UnmClassScheduler.Catalog.Department
 
   schema "colleges" do
     field :code, :string
@@ -15,14 +17,8 @@ defmodule UnmClassScheduler.Catalog.College do
     timestamps()
   end
 
-  def changeset(college, attrs) do
-    college
-    |> cast(attrs, [:code, :name])
-    |> validate_required([:code, :name])
-    |> unique_constraint(:code)
-  end
-
-  def validate(params) do
+  @impl true
+  def validate_data(params, _associations \\ []) do
     data = %{}
     types = %{code: :string, name: :string}
     cs = {data, types}
@@ -35,4 +31,7 @@ defmodule UnmClassScheduler.Catalog.College do
       {:error, cs.errors}
     end
   end
+
+  @impl true
+  def conflict_keys(), do: :code
 end

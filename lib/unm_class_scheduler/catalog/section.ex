@@ -1,4 +1,11 @@
 defmodule UnmClassScheduler.Catalog.Section do
+  @behaviour UnmClassScheduler.Schema.Validatable
+  @behaviour UnmClassScheduler.Schema.HasConflicts
+
+  use UnmClassScheduler.Schema
+
+  import Ecto.Changeset
+
   alias UnmClassScheduler.Catalog.{
     Semester,
     Course,
@@ -7,10 +14,6 @@ defmodule UnmClassScheduler.Catalog.Section do
     MeetingTime,
     Crosslist,
   }
-
-  use UnmClassScheduler.Schema, conflict_keys: [:crn, :semester_uuid]
-
-  import Ecto.Changeset
 
   schema "sections" do
     field :crn, :string
@@ -36,17 +39,8 @@ defmodule UnmClassScheduler.Catalog.Section do
     timestamps()
   end
 
-  def create_section(attrs, course, semester, part_of_term, status) do
-    Ecto.build_assoc(course, :sections)
-    |> cast(attrs, [:crn, :number, :enrollment, :enrollment_max, :waitlist, :waitlist_max, :credits, :fees, :text, :title])
-    |> put_assoc(:semester, semester)
-    |> put_assoc(:part_of_term, part_of_term)
-    |> put_assoc(:status, status)
-    |> validate_required([:crn, :number, :course_uuid, :semester])
-    |> unique_constraint([:crn, :course_uuid, :semester])
-  end
-
-  def validate(params, course, semester, part_of_term, status) do
+  @impl true
+  def validate_data(params, course: course, semester: semester, part_of_term: part_of_term, status: status) do
     data = %{}
     types = %{
       crn: :string,
@@ -81,4 +75,7 @@ defmodule UnmClassScheduler.Catalog.Section do
       {:error, cs.errors}
     end
   end
+
+  @impl true
+  def conflict_keys(), do: [:crn, :semester_uuid]
 end

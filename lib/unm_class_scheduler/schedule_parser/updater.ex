@@ -1,7 +1,5 @@
 defmodule UnmClassScheduler.ScheduleParser.Updater do
   alias UnmClassScheduler.Repo
-  #alias UnmClassScheduler.ScheduleParser.EventHandler
-  alias UnmClassScheduler.ScheduleParser.TestEventHandler
   alias UnmClassScheduler.ScheduleParser.Extractor
   alias UnmClassScheduler.Catalog.{
     Semester,
@@ -79,15 +77,6 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
     |> Repo.transaction(timeout: 60_000)
   end
 
-  defp repo_insert(changeset, repo, conflict_target) do
-    repo.insert!(
-      changeset,
-      on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
-      conflict_target: conflict_target,
-      returning: true
-    )
-  end
-
   defp repo_insert_all(entries, schema, repo, placeholders) do
     repo.insert_all(
       schema,
@@ -140,7 +129,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
         now: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
       }
       Enum.map(attrs_to_insert, fn %{fields: f} ->
-        {:ok, valid_f} = schema.validate(f)
+        {:ok, valid_f} = schema.validate_data(f)
         valid_f
         |> Map.merge(%{
           inserted_at: {:placeholder, :now},
@@ -161,7 +150,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
       }
       Enum.map(attrs_to_insert, fn %{fields: f, associations: a} ->
         parent = get_in(cache, [schema.parent_module(), a[schema.parent_module()][:code]])
-        {:ok, valid_f} = schema.validate(f, parent)
+        {:ok, valid_f} = schema.validate_data(f, [{schema.parent_key(), parent}])
         valid_f
         |> Map.merge(%{
           inserted_at: {:placeholder, :now},
@@ -170,7 +159,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
       end)
       |> repo_insert_all(schema, repo, placeholders)
       |> repo.preload(schema.parent_key())
-      |> Stream.map(fn inserted -> {cache_key_fn.(inserted, schema.parent(inserted)), inserted} end)
+      |> Stream.map(fn inserted -> {cache_key_fn.(inserted, schema.get_parent(inserted)), inserted} end)
       |> Enum.into(%{})
       |> (&({:ok, &1})).()
     end
@@ -186,7 +175,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
         semester = get_in(cache, [Semester, a[Semester][:code]])
         part_of_term = get_in(cache, [:parts_of_term, a[:part_of_term][:code]])
         status = get_in(cache, [:statuses, a[:status][:code]])
-        {:ok, valid_f} = Section.validate(f, course, semester, part_of_term, status)
+        {:ok, valid_f} = Section.validate_data(f, course: course, semester: semester, part_of_term: part_of_term, status: status)
 
         valid_f
         |> Map.merge(%{
@@ -212,7 +201,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
       Stream.map(attrs_to_insert, fn %{fields: f, associations: a} ->
         section = get_in(cache, [Section, "#{a[Section][:crn]}__#{a[Semester][:code]}"])
         building = get_in(cache, [Building, building_code(a[Campus][:code], a[Building][:code])])
-        {:ok, valid_f} = MeetingTime.validate(f, section, building)
+        {:ok, valid_f} = MeetingTime.validate_data(f, section: section, building: building)
 
         valid_f
         |> Map.merge(%{
@@ -236,7 +225,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
         section = get_in(cache, [Section, "#{a[:section][:crn]}__#{a[Semester][:code]}"])
         crosslist = get_in(cache, [Section, "#{a[:crosslist][:crn]}__#{a[Semester][:code]}"])
 
-        case Crosslist.validate(f, section, crosslist) do
+        case Crosslist.validate_data(f, section: section, crosslist: crosslist) do
           {:ok, valid_f} ->
             valid_f
             |> Map.merge(%{
@@ -246,8 +235,6 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
           # There are some crosslists in the data that are expected to be invalid.
           # In which case, we just reject them.
           {:error, _err} ->
-            nil
-          _ ->
             nil
         end
       end)

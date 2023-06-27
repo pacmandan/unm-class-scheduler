@@ -1,14 +1,14 @@
 defmodule UnmClassScheduler.Catalog.Subject do
-  alias UnmClassScheduler.Catalog.{
-    Department,
-    Course
-  }
+  @behaviour UnmClassScheduler.Schema.Validatable
+  @behaviour UnmClassScheduler.Schema.HasConflicts
+  @behaviour UnmClassScheduler.Schema.Child
 
-  use UnmClassScheduler.Schema, conflict_keys: :code
-  use UnmClassScheduler.Schema.Parent, child: :courses
-  use UnmClassScheduler.Schema.Child, parent: Department
+  alias UnmClassScheduler.Catalog.Department
+  alias UnmClassScheduler.Catalog.Course
 
   import Ecto.Changeset
+
+  use UnmClassScheduler.Schema
 
   schema "subjects" do
     field :code, :string
@@ -20,14 +20,8 @@ defmodule UnmClassScheduler.Catalog.Subject do
     timestamps()
   end
 
-  def changeset(subject, attrs) do
-    subject
-    |> cast(attrs, [:code, :name])
-    |> validate_required([:code, :name])
-    |> unique_constraint(:code)
-  end
-
-  def validate(params, department) do
+  @impl true
+  def validate_data(params, department: department) do
     data = %{}
     types = %{code: :string, name: :string, department_uuid: :string}
     cs = {data, types}
@@ -41,7 +35,15 @@ defmodule UnmClassScheduler.Catalog.Subject do
     end
   end
 
+  @impl true
+  def parent_module(), do: Department
+
+  @impl true
   def parent_key(), do: :department
 
-  def parent(subject), do: subject.department
+  @impl true
+  def get_parent(subject), do: subject.department
+
+  @impl true
+  def conflict_keys(), do: :code
 end

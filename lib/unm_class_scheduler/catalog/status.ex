@@ -1,5 +1,7 @@
 defmodule UnmClassScheduler.Catalog.Status do
-  use UnmClassScheduler.Schema, conflict_keys: :code
+  @behaviour UnmClassScheduler.Schema.HasConflicts
+
+  use UnmClassScheduler.Schema
 
   schema "statuses" do
     field :code, :string
@@ -8,6 +10,6 @@ defmodule UnmClassScheduler.Catalog.Status do
     timestamps()
   end
 
-  # Not sure we need a changeset here?
-  # These are static fields that will only update via seeds and migrations.
+  @impl true
+  def conflict_keys(), do: :code
 end

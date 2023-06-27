@@ -1,8 +1,6 @@
 defmodule UnmClassScheduler.Catalog.MeetingTime do
-  alias UnmClassScheduler.Catalog.{
-    Section,
-    Building,
-  }
+  @behaviour UnmClassScheduler.Schema.Validatable
+  @behaviour UnmClassScheduler.Schema.HasConflicts
 
   @day_mapping %{
     sunday: "U",
@@ -17,14 +15,12 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
   @inverse_day_mapping @day_mapping
     |> Map.new(fn {atom, string} -> {string, atom} end)
 
-  use UnmClassScheduler.Schema, conflict_keys: [
-    :section_uuid,
-    :index,
-    :start_date,
-    :end_date,
-  ]
+  use UnmClassScheduler.Schema
 
   import Ecto.Changeset
+
+  alias UnmClassScheduler.Catalog.Section
+  alias UnmClassScheduler.Catalog.Building
 
   schema "meeting_times" do
     field :start_date, :date
@@ -46,11 +42,6 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
     timestamps()
   end
 
-  def create_meeting_time(attrs, section) do
-    Ecto.build_assoc(section, :meeting_times)
-    |> cast(attrs, [:start_date, :end_date, :start_time, :end_time, :room])
-  end
-
   def day_from_string(day) do
     @inverse_day_mapping[day]
   end
@@ -61,7 +52,8 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
     |> Enum.into(%{})
   end
 
-  def validate(params, section, building) do
+  @impl true
+  def validate_data(params, section: section, building: building) do
     data = %{}
     types = %{
       start_date: :date,
@@ -118,4 +110,12 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
       {:error, cs.errors}
     end
   end
+
+  @impl true
+  def conflict_keys(), do: [
+    :section_uuid,
+    :index,
+    :start_date,
+    :end_date,
+  ]
 end

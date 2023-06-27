@@ -104,7 +104,6 @@ IO.puts("Inserting Instrucitonal Methods...")
 # TODO: Insert these
 # FIXME: What do we do about the ones with empty string?
 
-#UnmClassScheduler.ScheduleParser.Updater.load_from_file("./xmls/current.xml")
 UnmClassScheduler.ScheduleParser.Updater.load_from_files([
   "./xmls/current.xml",
   "./xmls/next1.xml",

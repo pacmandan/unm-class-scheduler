@@ -1,14 +1,14 @@
 defmodule UnmClassScheduler.Catalog.Course do
-  alias UnmClassScheduler.Catalog.{
-    Subject,
-    Section
-  }
+  @behaviour UnmClassScheduler.Schema.Validatable
+  @behaviour UnmClassScheduler.Schema.HasConflicts
+  @behaviour UnmClassScheduler.Schema.Child
 
-  use UnmClassScheduler.Schema, conflict_keys: [:number, :subject_uuid]
-  use UnmClassScheduler.Schema.Parent, child: :sections
-  use UnmClassScheduler.Schema.Child, parent: Subject
+  use UnmClassScheduler.Schema
 
   import Ecto.Changeset
+
+  alias UnmClassScheduler.Catalog.Subject
+  alias UnmClassScheduler.Catalog.Section
 
   schema "courses" do
     field :number, :string
@@ -21,14 +21,8 @@ defmodule UnmClassScheduler.Catalog.Course do
     timestamps()
   end
 
-  def changeset(course, attrs) do
-    course
-    |> cast(attrs, [:number, :title, :catalog_description])
-    |> validate_required([:number, :title, :subject_uuid])
-    |> unique_constraint([:number, :subject_uuid])
-  end
-
-  def validate(params, subject) do
+  @impl true
+  def validate_data(params, subject: subject) do
     data = %{}
     types = %{number: :string, title: :string, catalog_description: :string, subject_uuid: :string}
     cs = {data, types}
@@ -42,9 +36,17 @@ defmodule UnmClassScheduler.Catalog.Course do
     end
   end
 
+  @impl true
+  def parent_module(), do: Subject
+
+  @impl true
   def parent_key(), do: :subject
 
-  def parent(course), do: course.subject
+  @impl true
+  def get_parent(course), do: course.subject
+
+  @impl true
+  def conflict_keys(), do: [:number, :subject_uuid]
 
   # Proposed view for finding courses by number and subject.
   # I'll wait to implement this until we start getting into the search API.

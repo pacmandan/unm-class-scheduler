@@ -47,7 +47,6 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     "day" => :day,
     "room" => :room,
   }
-  @accepted_tags Map.keys(@tags)
 
   @attribute_maps %{
     Semester => %{
