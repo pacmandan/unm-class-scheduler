@@ -26,6 +26,8 @@ defmodule UnmClassScheduler.Repo.Migrations.CreateMeetingTimes do
     create unique_index(:meeting_times, [
       :section_uuid,
       :index,
+      :start_date,
+      :end_date,
     ])
   end
 end

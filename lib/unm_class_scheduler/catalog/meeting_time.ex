@@ -19,7 +19,9 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
 
   use UnmClassScheduler.Schema, conflict_keys: [
     :section_uuid,
-    :index
+    :index,
+    :start_date,
+    :end_date,
   ]
 
   import Ecto.Changeset

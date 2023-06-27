@@ -11,6 +11,7 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     Course,
     Section,
     MeetingTime,
+    Crosslist,
   }
   alias UnmClassScheduler.ScheduleParser.ExtractedItem
 
@@ -83,6 +84,11 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
       "part-of-term" => :part_of_term_code,
       "status" => :status_code,
     },
+    Crosslist => %{
+      "crn" => :crosslist_crn,
+      "subject" => :subject_code,
+      "number" => :course_number,
+    }
   }
   @accepted_types Map.keys(@attribute_maps)
 
@@ -108,6 +114,7 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
       Course => [],
       Section => [],
       MeetingTime => [],
+      Crosslist => [],
     }
   end
 
@@ -123,7 +130,13 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
       Subject => extracted[Subject] |> Enum.uniq_by((&(&1.fields[:code]))),
       Course => extracted[Course] |> Enum.uniq_by((&({&1.fields[:number], &1.associations[Subject][:code]}))),
       Section => extracted[Section] |> Enum.uniq_by((&({&1.fields[:crn], &1.associations[Semester][:code]}))),
-      MeetingTime => extracted[MeetingTime]
+      MeetingTime => extracted[MeetingTime],
+      Crosslist => extracted[Crosslist]
+        |> Enum.uniq_by((&({
+          &1.associations[Semester][:code],
+          &1.associations[:section][:crn],
+          &1.associations[:crosslist][:crn],
+        })))
     }
   end
 
@@ -233,8 +246,16 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
 
   def handle_event(:start_element, {"section", attrs}, %{current: c} = state) do
     new_current = if c[:crosslists] do
-      # TODO: Extract to crosslists of existing Section
-      c
+      fields = transform_fields(attrs, Crosslist)
+      ex = %ExtractedItem{
+        fields: fields |> Map.drop([:crosslist_crn]),
+        associations: %{
+          Semester => %{code: c[Semester].fields[:code]},
+          section: %{crn: c[Section].fields[:crn]},
+          crosslist: %{crn: fields[:crosslist_crn]},
+        }
+      }
+      update_current(c, Crosslist, ex)
     else
       fields = transform_fields(attrs, Section)
       |> Map.put(:num_meetings, 0)
@@ -345,6 +366,7 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
       associations: %{
         Section => %{crn: section.fields[:crn]},
         Campus => %{code: c[Campus].fields[:code]},
+        Semester => %{code: c[Semester].fields[:code]},
       }
     }
     new_current = update_current(c, MeetingTime, ex)
@@ -456,6 +478,21 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
   # Default :start_element handler
   def handle_event(:start_element, _, state) do
     {:ok, state}
+  end
+
+  # Unfortunately, we have situations where there is a <section> inside a <section>.
+  # So that internal section is represented as Crosslist, and it should ONLY
+  # ever be in place when we're in :crosslists.
+  # This marks the end of a Crosslist.
+  def handle_event(:end_element, "section", %{current: %{Crosslist => _, crosslists: true} = current, completed: completed}) do
+    # The _crosslist in the args is just for matching.
+    # We need to pop it off of current anyway.
+    {crosslist, new_current} = Map.pop(current, Crosslist)
+    new_state = %{
+      current: new_current,
+      completed: push_completed(completed, Crosslist, crosslist),
+    }
+    {:ok, new_state}
   end
 
   # No need for :end_element handlers for every tag.

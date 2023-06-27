@@ -5,6 +5,7 @@ defmodule UnmClassScheduler.Catalog.Section do
     PartOfTerm,
     Status,
     MeetingTime,
+    Crosslist,
   }
 
   use UnmClassScheduler.Schema, conflict_keys: [:crn, :semester_uuid]
@@ -30,6 +31,7 @@ defmodule UnmClassScheduler.Catalog.Section do
     belongs_to :course, Course, references: :uuid, foreign_key: :course_uuid
 
     has_many :meeting_times, MeetingTime, references: :uuid, foreign_key: :section_uuid
+    many_to_many :crosslists, __MODULE__, join_through: Crosslist, join_keys: [section_uuid: :uuid, crosslist_uuid: :uuid]
 
     timestamps()
   end

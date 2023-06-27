@@ -20,8 +20,6 @@ defmodule UnmClassScheduler.Repo.Migrations.CreateSections do
       add :semester_uuid, references(:semesters, column: :uuid, type: :uuid), null: false
       add :course_uuid, references(:courses, column: :uuid, type: :uuid), null: false
 
-      # TODO: All the rest of the section fields
-
       timestamps()
     end
 
