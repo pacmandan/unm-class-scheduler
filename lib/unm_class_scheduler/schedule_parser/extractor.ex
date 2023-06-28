@@ -12,6 +12,7 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     Section,
     MeetingTime,
     Crosslist,
+    Instructor,
   }
   alias UnmClassScheduler.ScheduleParser.ExtractedItem
 
@@ -22,6 +23,8 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     completed: completed_state_t,
   }
 
+  # List of every tag we read, and how it maps into the :current state.
+  # This is used primarily in the :end_element handler.
   @tags %{
     "semester" => Semester,
     "campus" => Campus,
@@ -32,6 +35,7 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     "course" => Course,
     "section" => Section,
     "meeting-time" => MeetingTime,
+    "instructor" => Instructor,
     "catalog-description" => :catalog_description,
     "enrollment" => :enrollment,
     "waitlist" => :waitlist,
@@ -46,8 +50,13 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     "end-time" => :end_time,
     "day" => :day,
     "room" => :room,
+    "first" => :first,
+    "last" => :last,
+    "middleInitial" => :middle_initial,
+    "email" => :email,
   }
 
+  # This maps the XML attributes on certain tags to more useful map keys.
   @attribute_maps %{
     Semester => %{
       "code" => :code,
@@ -87,11 +96,18 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
       "crn" => :crosslist_crn,
       "subject" => :subject_code,
       "number" => :course_number,
-    }
+    },
+    Instructor => %{
+      "primary" => :primary,
+    },
   }
   @accepted_types Map.keys(@attribute_maps)
 
   def extract_from(filenames) do
+    # FIXME: This doesn't actually do what I want it to.
+    # The results from one should just flow into the input of the next,
+    # so the output of the final file should have the results from every previous file.
+    # As of now, it has to concatenate everything at the very end.
     filenames
     |> Enum.reduce(init_completed(), fn filename, acc ->
       {:ok, extracted} = File.stream!(Path.expand(filename))
@@ -114,6 +130,7 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
       Section => [],
       MeetingTime => [],
       Crosslist => [],
+      Instructor => [],
     }
   end
 
@@ -135,7 +152,8 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
           &1.associations[Semester][:code],
           &1.associations[:section][:crn],
           &1.associations[:crosslist][:crn],
-        })))
+        }))),
+      Instructor => extracted[Instructor] |> Enum.uniq_by((&({&1.fields[:email], &1.fields[:first], &1.fields[:last]}))),
     }
   end
 
@@ -424,6 +442,9 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
   def handle_event(:characters, chars,
     %{current: %{MeetingTime => mt, start_time: true} = c} = state
   ) do
+    # Time is formatted as a 4 digit number
+    # i.e. 0900, 1345, etc.
+    # This comes in as a string.
     time = chars
     |> String.split_at(2)
     |> Tuple.to_list()
@@ -441,6 +462,9 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
   def handle_event(:characters, chars,
     %{current: %{MeetingTime => mt, end_time: true} = c} = state
   ) do
+        # Time is formatted as a 4 digit number
+    # i.e. 0900, 1345, etc.
+    # This comes in as a string.
     time = chars
     |> String.split_at(2)
     |> Tuple.to_list()
@@ -474,10 +498,74 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     {:ok, state |> Map.put(:current, update_current(c, MeetingTime, ex))}
   end
 
+  def handle_event(:start_element, {"instructor", [{"primary", _primary}]}, %{current: c} = state) do
+    # TODO: Handle the "primary" attribute in the link table.
+    # TODO: Also add a link to the current Section via a new InstructorSection
+
+    # Instructors have no associations, and no fields present in their open tag.
+    # Everything gets filled in as we go.
+    new_current = update_current(c, Instructor, %ExtractedItem{})
+
+    {:ok, state |> Map.put(:current, new_current)}
+  end
+
+  def handle_event(:start_element, {"first", _}, %{current: c} = state) do
+    {:ok, state |> Map.put(:current, update_current(c, :first, true))}
+  end
+
+  def handle_event(:characters, chars,
+    %{current: %{Instructor => i, first: true} = c} = state
+  ) do
+    ex = ExtractedItem.push_fields(i, %{first: chars})
+    {:ok, state |> Map.put(:current, update_current(c, Instructor, ex))}
+  end
+
+  def handle_event(:start_element, {"last", _}, %{current: c} = state) do
+    {:ok, state |> Map.put(:current, update_current(c, :last, true))}
+  end
+
+  def handle_event(:characters, chars,
+    %{current: %{Instructor => i, last: true} = c} = state
+  ) do
+    ex = ExtractedItem.push_fields(i, %{last: chars})
+    {:ok, state |> Map.put(:current, update_current(c, Instructor, ex))}
+  end
+
+  def handle_event(:start_element, {"middleInitial", _}, %{current: c} = state) do
+    {:ok, state |> Map.put(:current, update_current(c, :middle_initial, true))}
+  end
+
+  def handle_event(:characters, chars,
+    %{current: %{Instructor => i, middle_initial: true} = c} = state
+  ) do
+    ex = ExtractedItem.push_fields(i, %{middle_initial: chars})
+    {:ok, state |> Map.put(:current, update_current(c, Instructor, ex))}
+  end
+
+  def handle_event(:start_element, {"email", _}, %{current: c} = state) do
+    {:ok, state |> Map.put(:current, update_current(c, :email, true))}
+  end
+
+  def handle_event(:characters, chars,
+    %{current: %{Instructor => i, email: true} = c} = state
+  ) do
+    ex = ExtractedItem.push_fields(i, %{email: chars})
+    {:ok, state |> Map.put(:current, update_current(c, Instructor, ex))}
+  end
+
+  # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  # PUT NEW :start_element AND :characters HANDLERS ABOVE THIS LINE
+
   # Default :start_element handler
   def handle_event(:start_element, _, state) do
     {:ok, state}
   end
+
+  # TODO: Custom :end_element handler for Instructor
+  # We need to complete BOTH Instructor AND InstructorSection at the same time.
+
+
+  # TODO: Maybe move this up to group with the other :section handlers?
 
   # Unfortunately, we have situations where there is a <section> inside a <section>.
   # So that internal section is represented as Crosslist, and it should ONLY
@@ -494,6 +582,7 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     {:ok, new_state}
   end
 
+  # Default :end_element handler
   # No need for :end_element handlers for every tag.
   # They all do the same thing - pop the current off and move it to completed.
   # (If it's nil or true, just pop it from the current list - nothing to complete here.)
@@ -501,7 +590,7 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     {new_completed, new_current} = case Map.pop(current, @tags[tag]) do
       # Not a tag we pushed to current? Nothing new in completed.
       {nil, rest} -> {completed, rest}
-      # Tag that only had chars? Nothing new in completed.
+      # Tag that only had chars or was used as a placeholder? Nothing new in completed.
       {true, rest} -> {completed, rest}
       # Actual completed element? Push to the appropriate completed list.
       {done, rest} -> {push_completed(completed, @tags[tag], done), rest}

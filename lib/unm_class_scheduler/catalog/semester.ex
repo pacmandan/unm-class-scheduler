@@ -29,5 +29,5 @@ defmodule UnmClassScheduler.Catalog.Semester do
   end
 
   @impl true
-  def conflict_keys(), do: [:code]
+  def conflict_keys(), do: :code
 end

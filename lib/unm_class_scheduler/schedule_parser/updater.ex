@@ -14,6 +14,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
     Status,
     MeetingTime,
     Crosslist,
+    Instructor,
   }
 
   import Ecto.Query
@@ -21,10 +22,10 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   def load_from_files(filenames) do
     filenames
     |> Extractor.extract_from()
-    |> mass_insert2()
+    |> mass_insert()
   end
 
-  def mass_insert2(extracted_attrs) do
+  def mass_insert(extracted_attrs) do
     Ecto.Multi.new()
     |> Ecto.Multi.run(
       :parts_of_term,
@@ -74,6 +75,10 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
       Crosslist,
       insert_crosslists(extracted_attrs[Crosslist])
     )
+    |> Ecto.Multi.run(
+      Instructor,
+      insert_schemaless(extracted_attrs[Instructor], Instructor, &get_email/1)
+    )
     |> Repo.transaction(timeout: 60_000)
   end
 
@@ -99,13 +104,11 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
     end
   end
 
-  defp get_code(i) do
-    i.code
-  end
+  defp get_code(i), do: i.code
 
-  defp get_code(i, _p) do
-    i.code
-  end
+  defp get_code(i, _p), do: i.code
+
+  defp get_email(i), do: i.email
 
   defp building_key(building, campus) do
     building_code(campus.code, building.code)
