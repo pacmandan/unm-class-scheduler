@@ -13,6 +13,7 @@ defmodule UnmClassScheduler.Catalog.Section do
     Status,
     MeetingTime,
     Crosslist,
+    InstructorSection,
   }
 
   schema "sections" do
@@ -35,6 +36,9 @@ defmodule UnmClassScheduler.Catalog.Section do
 
     has_many :meeting_times, MeetingTime, references: :uuid, foreign_key: :section_uuid
     many_to_many :crosslists, __MODULE__, join_through: Crosslist, join_keys: [section_uuid: :uuid, crosslist_uuid: :uuid]
+    # Can't do many_to_many - it would skip the "primary" field on the join table.
+    # many_to_many :instructors, Instructor, join_through: InstructorSection, join_keys: [section_uuid: :uuid, instructor_uuid: :uuid]
+    has_many :instructors, InstructorSection, references: :uuid, foreign_key: :section_uuid
 
     timestamps()
   end

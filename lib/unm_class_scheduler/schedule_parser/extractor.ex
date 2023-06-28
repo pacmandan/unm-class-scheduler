@@ -13,6 +13,7 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     MeetingTime,
     Crosslist,
     Instructor,
+    InstructorSection,
   }
   alias UnmClassScheduler.ScheduleParser.ExtractedItem
 
@@ -131,6 +132,7 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
       MeetingTime => [],
       Crosslist => [],
       Instructor => [],
+      InstructorSection => [],
     }
   end
 
@@ -154,6 +156,14 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
           &1.associations[:crosslist][:crn],
         }))),
       Instructor => extracted[Instructor] |> Enum.uniq_by((&({&1.fields[:email], &1.fields[:first], &1.fields[:last]}))),
+      InstructorSection => extracted[InstructorSection]
+        |> Enum.uniq_by((&({
+          &1.associations[Instructor][:email],
+          &1.associations[Instructor][:first],
+          &1.associations[Instructor][:last],
+          &1.associations[Section][:crn],
+          &1.associations[Semester][:code],
+        }))),
     }
   end
 
@@ -498,13 +508,21 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     {:ok, state |> Map.put(:current, update_current(c, MeetingTime, ex))}
   end
 
-  def handle_event(:start_element, {"instructor", [{"primary", _primary}]}, %{current: c} = state) do
-    # TODO: Handle the "primary" attribute in the link table.
-    # TODO: Also add a link to the current Section via a new InstructorSection
+  def handle_event(:start_element, {"instructor", attrs}, %{current: c} = state) do
+    fields = transform_fields(attrs, Instructor)
+
+    is = %ExtractedItem{
+      fields: %{primary: (if fields[:primary] == "y", do: true, else: false)},
+      associations: %{
+        Section => %{crn: c[Section].fields[:crn]},
+        Semester => %{code: c[Semester].fields[:code]},
+      }
+    }
 
     # Instructors have no associations, and no fields present in their open tag.
-    # Everything gets filled in as we go.
+    # Everything there gets filled in as we go.
     new_current = update_current(c, Instructor, %ExtractedItem{})
+    |> update_current(InstructorSection, is)
 
     {:ok, state |> Map.put(:current, new_current)}
   end
@@ -561,9 +579,30 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     {:ok, state}
   end
 
-  # TODO: Custom :end_element handler for Instructor
   # We need to complete BOTH Instructor AND InstructorSection at the same time.
+  def handle_event(:end_element, "instructor", %{current: %{Instructor => i, InstructorSection => is} = current, completed: completed}) do
+    #{i, new_current} = Map.pop(current, Instructor)
+    #{is, new_current} = Map.pop(new_current, InstructorSection)
+    new_current = Map.drop(current, [Instructor, InstructorSection])
 
+    # Now that we've built the instructor, push it as an association to InstructorSection
+    is = is |> ExtractedItem.push_associations(%{
+      Instructor => %{
+        email: i.fields[:email],
+        first: i.fields[:first],
+        last: i.fields[:last],
+      }
+    })
+
+    new_completed = push_completed(completed, Instructor, i)
+    |> push_completed(InstructorSection, is)
+
+    new_state = %{
+      current: new_current,
+      completed: new_completed
+    }
+    {:ok, new_state}
+  end
 
   # TODO: Maybe move this up to group with the other :section handlers?
 

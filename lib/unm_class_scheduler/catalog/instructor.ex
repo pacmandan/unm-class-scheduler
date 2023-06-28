@@ -2,6 +2,8 @@ defmodule UnmClassScheduler.Catalog.Instructor do
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
 
+  alias UnmClassScheduler.Catalog.InstructorSection
+
   use UnmClassScheduler.Schema
 
   import Ecto.Changeset
@@ -11,6 +13,10 @@ defmodule UnmClassScheduler.Catalog.Instructor do
     field :last, :string
     field :middle_initial, :string
     field :email, :string
+
+    # Can't do many_to_many - it would skip the "primary" field on the join table.
+    #many_to_many :sections, Section, join_through: InstructorSection, join_keys: [instructor_uuid: :uuid, section_uuid: :uuid]
+    has_many :sections, InstructorSection, references: :uuid, foreign_key: :instructor_uuid
 
     timestamps()
   end

@@ -1,4 +1,5 @@
 defmodule UnmClassScheduler.ScheduleParser.Updater do
+  alias UnmClassScheduler.Catalog.InstructorSection
   alias UnmClassScheduler.Repo
   alias UnmClassScheduler.ScheduleParser.Extractor
   alias UnmClassScheduler.Catalog.{
@@ -77,7 +78,11 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
     )
     |> Ecto.Multi.run(
       Instructor,
-      insert_schemaless(extracted_attrs[Instructor], Instructor, &get_email/1)
+      insert_schemaless(extracted_attrs[Instructor], Instructor, &instructor_key/1)
+    )
+    |> Ecto.Multi.run(
+      InstructorSection,
+      insert_instructors_sections(extracted_attrs[InstructorSection])
     )
     |> Repo.transaction(timeout: 60_000)
   end
@@ -108,7 +113,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
 
   defp get_code(i, _p), do: i.code
 
-  defp get_email(i), do: i.email
+  defp instructor_key(i), do: "#{i.email}_#{i.first}_#{i.last}"
 
   defp building_key(building, campus) do
     building_code(campus.code, building.code)
@@ -243,6 +248,29 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
       end)
       |> Enum.reject(&is_nil/1)
       |> repo_insert_all(Crosslist, repo, placeholders)
+      |> (&({:ok, &1})).()
+    end
+  end
+
+  defp insert_instructors_sections(attrs_to_insert) do
+    fn repo, cache ->
+      placeholders = %{
+        now: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+      }
+      Enum.map(attrs_to_insert, fn %{fields: f, associations: a} ->
+        section = get_in(cache, [Section, "#{a[Section][:crn]}__#{a[Semester][:code]}"])
+        instructor = get_in(cache, [Instructor, "#{a[Instructor][:email]}_#{a[Instructor][:first]}_#{a[Instructor][:last]}"])
+
+        {:ok, valid_f} = InstructorSection.validate_data(f, section: section, instructor: instructor)
+        valid_f
+        |> Map.merge(%{
+          inserted_at: {:placeholder, :now},
+          updated_at: {:placeholder, :now},
+        })
+      end)
+      |> Stream.chunk_every(15_000)
+      |> Enum.map(fn list -> repo_insert_all(list, InstructorSection, repo, placeholders) end)
+      |> Enum.reduce([], fn inserted, acc -> acc ++ inserted end)
       |> (&({:ok, &1})).()
     end
   end
