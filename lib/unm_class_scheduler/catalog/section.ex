@@ -14,6 +14,8 @@ defmodule UnmClassScheduler.Catalog.Section do
     MeetingTime,
     Crosslist,
     InstructorSection,
+    DeliveryType,
+    InstructionalMethod,
   }
 
   schema "sections" do
@@ -30,6 +32,8 @@ defmodule UnmClassScheduler.Catalog.Section do
 
     belongs_to :part_of_term, PartOfTerm, references: :uuid, foreign_key: :part_of_term_uuid
     belongs_to :status, Status, references: :uuid, foreign_key: :status_uuid
+    belongs_to :delivery_type, DeliveryType, references: :uuid, foreign_key: :delivery_type_uuid
+    belongs_to :instructional_method, InstructionalMethod, references: :uuid, foreign_key: :instructional_method_uuid
 
     belongs_to :semester, Semester, references: :uuid, foreign_key: :semester_uuid
     belongs_to :course, Course, references: :uuid, foreign_key: :course_uuid
@@ -44,7 +48,14 @@ defmodule UnmClassScheduler.Catalog.Section do
   end
 
   @impl true
-  def validate_data(params, course: course, semester: semester, part_of_term: part_of_term, status: status) do
+  def validate_data(params,
+      course: course,
+      semester: semester,
+      part_of_term: part_of_term,
+      status: status,
+      delivery_type: delivery_type,
+      instructional_method: instructional_method
+  ) do
     data = %{}
     types = %{
       crn: :string,
@@ -61,14 +72,20 @@ defmodule UnmClassScheduler.Catalog.Section do
       semester_uuid: :string,
       part_of_term_uuid: :string,
       status_uuid: :string,
+      delivery_type_uuid: :string,
+      instructional_method_uuid: :string,
     }
+
     all_params = params
     |> Map.merge(%{
       course_uuid: course.uuid,
       semester_uuid: semester.uuid,
       part_of_term_uuid: part_of_term.uuid,
-      status_uuid: status.uuid
+      status_uuid: status.uuid,
+      delivery_type_uuid: delivery_type.uuid
     })
+    |> add_instructional_method(instructional_method)
+
     cs = {data, types}
     |> cast(all_params, Map.keys(types))
     |> validate_required([:crn, :number, :course_uuid, :semester_uuid])
@@ -78,6 +95,11 @@ defmodule UnmClassScheduler.Catalog.Section do
     else
       {:error, cs.errors}
     end
+  end
+
+  defp add_instructional_method(params, nil), do: params
+  defp add_instructional_method(params, instructional_method) do
+    params |> Map.put(:instructional_method_uuid, instructional_method.uuid)
   end
 
   @impl true

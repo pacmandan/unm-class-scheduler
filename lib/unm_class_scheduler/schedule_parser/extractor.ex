@@ -14,6 +14,10 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     Crosslist,
     Instructor,
     InstructorSection,
+    PartOfTerm,
+    Status,
+    InstructionalMethod,
+    DeliveryType,
   }
   alias UnmClassScheduler.ScheduleParser.ExtractedItem
 
@@ -292,8 +296,8 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
           Subject => %{code: c[Subject].fields[:code]},
           Course => %{number: c[Course].fields[:number]},
           Semester => %{code: c[Semester].fields[:code]},
-          part_of_term: %{code: fields[:part_of_term_code]},
-          status: %{code: fields[:status_code]},
+          PartOfTerm => %{code: fields[:part_of_term_code]},
+          Status => %{code: fields[:status_code]},
         },
       }
       update_current(c, Section, ex)
@@ -381,6 +385,21 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
   ) do
     ex = ExtractedItem.push_fields(section, %{waitlist: chars})
     {:ok, state |> Map.put(:current, update_current(c, Section, ex))}
+  end
+
+  def handle_event(:start_element, {"delivery-type", [{"code", code}]}, %{current: c} = state) do
+    # We don't need any of the contents of this tag, just the code.
+    # So just update the current Section and move on.
+    section = ExtractedItem.push_associations(c[Section], %{DeliveryType => %{code: code}})
+    {:ok, state |> Map.put(:current, update_current(c, Section, section))}
+  end
+
+  def handle_event(:start_element, {"instructional-method", [{"code", code}]}, %{current: c} = state) do
+    # We don't need any of the contents of this tag, just the code.
+    # So just update the current Section and move on.
+    # NOTE: Sometimes the code is "". This gets handled later.
+    section = ExtractedItem.push_associations(c[Section], %{InstructionalMethod => %{code: code}})
+    {:ok, state |> Map.put(:current, update_current(c, Section, section))}
   end
 
   def handle_event(:start_element, {"meeting-time", _}, %{current: c} = state) do

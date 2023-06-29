@@ -14,6 +14,8 @@ alias UnmClassScheduler.Repo
 alias UnmClassScheduler.Catalog.{
   PartOfTerm,
   Status,
+  DeliveryType,
+  InstructionalMethod,
 }
 
 IO.puts("Inserting Parts of Term...")
@@ -87,10 +89,12 @@ IO.puts("Inserting Delivery Types...")
   "TD" => "*Thesis/Dissertation",
   "TH" => "Thesis",
   "TP" => "Topics",
+  "TPE" => "Topics Web Enhanced",
   "WR" => "Writing",
   "WS" => "Workshop",
 }
-# TODO: Insert these
+|> Stream.map(fn {code, name} -> %DeliveryType{code: code, name: name} end)
+|> Enum.each(&Repo.insert!/1)
 
 IO.puts("Inserting Instructional Methods...")
 %{
@@ -101,8 +105,8 @@ IO.puts("Inserting Instructional Methods...")
   "OL" => "Open Learning",
   "ONL" => "Online",
 }
-# TODO: Insert these
-# FIXME: What do we do about the ones with empty string?
+|> Stream.map(fn {code, name} -> %InstructionalMethod{code: code, name: name} end)
+|> Enum.each(&Repo.insert!/1)
 
 UnmClassScheduler.ScheduleParser.Updater.load_from_files([
   "./xmls/current.xml",

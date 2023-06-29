@@ -16,6 +16,8 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
     MeetingTime,
     Crosslist,
     Instructor,
+    DeliveryType,
+    InstructionalMethod,
   }
 
   import Ecto.Query
@@ -29,12 +31,20 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   def mass_insert(extracted_attrs) do
     Ecto.Multi.new()
     |> Ecto.Multi.run(
-      :parts_of_term,
+      PartOfTerm,
       fetch_coded_and_cache_all(PartOfTerm)
     )
     |> Ecto.Multi.run(
-      :statuses,
+      Status,
       fetch_coded_and_cache_all(Status)
+    )
+    |> Ecto.Multi.run(
+      DeliveryType,
+      fetch_coded_and_cache_all(DeliveryType)
+    )
+    |> Ecto.Multi.run(
+      InstructionalMethod,
+      fetch_coded_and_cache_all(InstructionalMethod)
     )
     |> Ecto.Multi.run(
       Semester,
@@ -181,9 +191,21 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
       Stream.map(attrs_to_insert, fn %{fields: f, associations: a} ->
         course = get_in(cache, [Course, course_code(a[Subject][:code], a[Course][:number])])
         semester = get_in(cache, [Semester, a[Semester][:code]])
-        part_of_term = get_in(cache, [:parts_of_term, a[:part_of_term][:code]])
-        status = get_in(cache, [:statuses, a[:status][:code]])
-        {:ok, valid_f} = Section.validate_data(f, course: course, semester: semester, part_of_term: part_of_term, status: status)
+        part_of_term = get_in(cache, [PartOfTerm, a[PartOfTerm][:code]])
+        status = get_in(cache, [Status, a[Status][:code]])
+        delivery_type = get_in(cache, [DeliveryType, a[DeliveryType][:code]])
+        instructional_method = get_in(cache, [InstructionalMethod, a[InstructionalMethod][:code]])
+        # TODO: Raise an error if part_of_term, status, delivery_type, or instructional method are unknown.
+        # We need to update the database seeds in that case. (I guess a data migration?)
+        {:ok, valid_f} = Section.validate_data(
+          f,
+          course: course,
+          semester: semester,
+          part_of_term: part_of_term,
+          status: status,
+          delivery_type: delivery_type,
+          instructional_method: instructional_method
+        )
 
         valid_f
         |> Map.merge(%{
