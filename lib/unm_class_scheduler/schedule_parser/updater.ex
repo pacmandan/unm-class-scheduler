@@ -94,6 +94,10 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
       InstructorSection,
       insert_instructors_sections(extracted_attrs[InstructorSection])
     )
+    |> Ecto.Multi.run(
+      :deleted,
+      &delete_all_not_updated/2
+    )
     |> Repo.transaction(timeout: 60_000)
   end
 
@@ -295,5 +299,32 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
       |> Enum.reduce([], fn inserted, acc -> acc ++ inserted end)
       |> (&({:ok, &1})).()
     end
+  end
+
+  # Everything that we didn't update in this round should be deleted.
+  # TODO: Maybe make this optional to the updater?
+  # That would give much more flexability in case we need to update just one file or something.
+  defp delete_all_not_updated(repo, cache) do
+    deleted = %{
+      InstructorSection => cache[InstructorSection] |> delete_not_updated(repo, InstructorSection),
+      Instructor => Map.values(cache[Instructor]) |> delete_not_updated(repo, Instructor),
+      Crosslist => cache[Crosslist] |> delete_not_updated(repo, Crosslist),
+      MeetingTime => cache[MeetingTime] |> delete_not_updated(repo, MeetingTime),
+      Section => Map.values(cache[Section]) |> delete_not_updated(repo, Section),
+      Course => Map.values(cache[Course]) |> delete_not_updated(repo, Course),
+      Subject => Map.values(cache[Subject]) |> delete_not_updated(repo, Subject),
+      Department => Map.values(cache[Department]) |> delete_not_updated(repo, Department),
+      College => Map.values(cache[College]) |> delete_not_updated(repo, College),
+      Building => Map.values(cache[Building]) |> delete_not_updated(repo, Building),
+      Campus => Map.values(cache[Campus]) |> delete_not_updated(repo, Campus),
+      Semester => Map.values(cache[Semester]) |> delete_not_updated(repo, Semester),
+    }
+    {:ok, deleted}
+  end
+
+  defp delete_not_updated(updated, repo, type) do
+    uuids = updated |> Enum.map((&(&1.uuid)))
+    q = from(i in type, where: i.uuid not in ^uuids)
+    repo.delete_all(q)
   end
 end

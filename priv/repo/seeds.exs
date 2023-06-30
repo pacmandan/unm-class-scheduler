@@ -100,7 +100,6 @@ IO.puts("Inserting Instructional Methods...")
 %{
   "ENH" => "Web Enhanced",
   "HYB" => "Hybrid",
-  # "" => "",
   "MOPS" => "Accelerated Online Programs",
   "OL" => "Open Learning",
   "ONL" => "Online",
