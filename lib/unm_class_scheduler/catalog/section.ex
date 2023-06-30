@@ -27,6 +27,8 @@ defmodule UnmClassScheduler.Catalog.Section do
     field :waitlist, :integer
     field :waitlist_max, :integer
     field :credits, :string
+    field :credits_min, :integer
+    field :credits_max, :integer
     field :fees, :float
     field :text, :string
 
@@ -66,6 +68,8 @@ defmodule UnmClassScheduler.Catalog.Section do
       waitlist: :integer,
       waitlist_max: :integer,
       credits: :string,
+      credits_min: :integer,
+      credits_max: :integer,
       fees: :float,
       text: :string,
       course_uuid: :string,

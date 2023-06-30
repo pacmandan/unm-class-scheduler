@@ -1,7 +1,6 @@
 defmodule UnmClassScheduler.ScheduleParser.Updater do
-  alias UnmClassScheduler.Catalog.InstructorSection
   alias UnmClassScheduler.Repo
-  alias UnmClassScheduler.ScheduleParser.Extractor
+  alias UnmClassScheduler.ScheduleParser.XMLExtractor
   alias UnmClassScheduler.Catalog.{
     Semester,
     Campus,
@@ -18,13 +17,14 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
     Instructor,
     DeliveryType,
     InstructionalMethod,
+    InstructorSection,
   }
 
   import Ecto.Query
 
   def load_from_files(filenames) do
     filenames
-    |> Extractor.extract_from()
+    |> XMLExtractor.extract_from()
     |> mass_insert()
   end
 

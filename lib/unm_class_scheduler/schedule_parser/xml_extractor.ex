@@ -1,4 +1,4 @@
-defmodule UnmClassScheduler.ScheduleParser.Extractor do
+defmodule UnmClassScheduler.ScheduleParser.XMLExtractor do
   @behaviour Saxy.Handler
 
   alias UnmClassScheduler.Catalog.{
@@ -21,12 +21,14 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
   }
   alias UnmClassScheduler.ScheduleParser.ExtractedItem
 
-  @type current_state_t :: %{atom() => ExtractedItem.t()}
+  @type current_state_t :: %{atom() => (ExtractedItem.t() | boolean())}
   @type completed_state_t :: %{atom() => list(ExtractedItem.t())}
   @type state_t :: %{
     current: current_state_t,
     completed: completed_state_t,
   }
+  @type tag_attribute_t :: {String.t(), String.t()}
+  @type tag_attribute_list_t :: list(tag_attribute_t())
 
   # List of every tag we read, and how it maps into the :current state.
   # This is used primarily in the :end_element handler.
@@ -108,21 +110,22 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
   }
   @accepted_types Map.keys(@attribute_maps)
 
+  @spec extract_from(list(String.t())) :: completed_state_t()
   def extract_from(filenames) do
-    # FIXME: This doesn't actually do what I want it to.
-    # The results from one should just flow into the input of the next,
-    # so the output of the final file should have the results from every previous file.
-    # As of now, it has to concatenate everything at the very end.
     filenames
     |> Enum.reduce(init_completed(), fn filename, acc ->
+      # Results from the previous extraction are passed into the next.
+      # This concatenates all extracted items as we go,
+      # and means we only need to dedup once at the end.
       {:ok, extracted} = File.stream!(Path.expand(filename))
       |> Saxy.parse_stream(__MODULE__, acc)
 
-      for {type, list} <- acc, into: %{}, do: {type, list ++ extracted[type]}
+      extracted
     end)
     |> dedup_extracted
   end
 
+  @spec init_completed() :: completed_state_t()
   defp init_completed() do
     %{
       Semester => [],
@@ -140,11 +143,15 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     }
   end
 
+  @spec dedup_extracted(completed_state_t()) :: completed_state_t()
   defp dedup_extracted(extracted) do
     %{
       Semester => (extracted[Semester] |> Enum.uniq_by((&(&1.fields[:code])))),
       Campus => (extracted[Campus] |> Enum.uniq_by((&(&1.fields[:code])))),
       Building => extracted[Building]
+        # Some buildings are extracted with code: "" and no name.
+        # That's just how they are in the original data file.
+        # Not sure what's up with this, but reject these.
         |> Enum.reject((&(&1.fields[:code] == "")))
         |> Enum.uniq_by((&({&1.fields[:code], &1.associations[Campus][:code]}))),
       College => extracted[College] |> Enum.uniq_by((&(&1.fields[:code]))),
@@ -171,6 +178,7 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     }
   end
 
+  @spec init_state(completed_state_t()) :: state_t()
   defp init_state(existing) when is_map(existing) do # \\ []
     %{
       completed: existing,
@@ -178,7 +186,11 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     }
   end
 
+  @spec transform_fields(tag_attribute_list_t(), atom()) :: map()
   defp transform_fields(fields, type) when type in @accepted_types do
+    # Tag attributes are extracted as [{String, String}].
+    # We want to map this to a %{key: "value"} map using @attribute_maps and type
+    # as guides.
     fields
     |> Map.new()
     |> Enum.reduce(%{}, fn {k, v}, acc ->
@@ -187,6 +199,17 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
         tk -> Map.put(acc, tk, v)
       end
     end)
+  end
+
+  @spec update_current(current_state_t(), atom() | module(), ExtractedItem.t() | boolean()) :: current_state_t()
+  defp update_current(current, type, updated) do
+    Map.put(current, type, updated)
+  end
+
+  @spec push_completed(completed_state_t(), atom(), ExtractedItem.t()) :: completed_state_t()
+  defp push_completed(completed_lists, type, new_element) do
+    completed_lists
+    |> Map.update!(type, fn completed -> [new_element | completed] end)
   end
 
   def handle_event(:start_document, _prolog, state) do
@@ -352,9 +375,18 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
   def handle_event(:characters, chars,
     %{current: %{Section => section, credits: true} = c} = state
   ) do
-    # TODO: Credits can either be formatted as "3" or "1 TO 6".
-    # Split this and make it so these can be read as numbers.
-    ex = ExtractedItem.push_fields(section, %{credits: chars})
+    # Credits either come in the form of "3" (single digit) or "1 TO 6" (range).
+    # Split into min and max if it's a range.
+    fields = if String.contains?(chars, "TO") do
+      [credits_min, credits_max] = String.split(chars, " TO ", parts: 2, trim: true)
+      |> Enum.map(&Integer.parse/1)
+      |> Enum.map((&(elem(&1, 0))))
+      %{credits: chars, credits_min: credits_min, credits_max: credits_max}
+    else
+      {credits, _} = Integer.parse(chars)
+      %{credits: chars, credits_min: credits, credits_max: credits}
+    end
+    ex = ExtractedItem.push_fields(section, fields)
     {:ok, state |> Map.put(:current, update_current(c, Section, ex))}
   end
 
@@ -600,8 +632,6 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
 
   # We need to complete BOTH Instructor AND InstructorSection at the same time.
   def handle_event(:end_element, "instructor", %{current: %{Instructor => i, InstructorSection => is} = current, completed: completed}) do
-    #{i, new_current} = Map.pop(current, Instructor)
-    #{is, new_current} = Map.pop(new_current, InstructorSection)
     new_current = Map.drop(current, [Instructor, InstructorSection])
 
     # Now that we've built the instructor, push it as an association to InstructorSection
@@ -622,8 +652,6 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
     }
     {:ok, new_state}
   end
-
-  # TODO: Maybe move this up to group with the other :section handlers?
 
   # Unfortunately, we have situations where there is a <section> inside a <section>.
   # So that internal section is represented as Crosslist, and it should ONLY
@@ -663,14 +691,5 @@ defmodule UnmClassScheduler.ScheduleParser.Extractor do
   # Default :characters handler
   def handle_event(:characters, _chars, %{current: _current} = state) do
     {:ok, state}
-  end
-
-  defp update_current(current, type, updated) do
-    Map.put(current, type, updated)
-  end
-
-  defp push_completed(completed_lists, type, new_element) do
-    completed_lists
-    |> Map.update!(type, fn completed -> [new_element | completed] end)
   end
 end
