@@ -6,8 +6,8 @@ import Config
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
 config :unm_class_scheduler, UnmClassScheduler.Repo,
-  username: "postgres",
-  password: "postgres",
+  username: "unm_test_user",
+  password: "localpass",
   hostname: "localhost",
   database: "unm_class_scheduler_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
@@ -24,7 +24,7 @@ config :unm_class_scheduler, UnmClassSchedulerWeb.Endpoint,
 config :unm_class_scheduler, UnmClassScheduler.Mailer, adapter: Swoosh.Adapters.Test
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime

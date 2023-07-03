@@ -1,7 +1,7 @@
 defmodule UnmClassScheduler.Catalog.Building do
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
-  @behaviour UnmClassScheduler.Schema.Child
+  @behaviour UnmClassScheduler.Schema.HasParent
 
   use UnmClassScheduler.Schema
 

@@ -1,4 +1,13 @@
 defmodule UnmClassScheduler.Catalog.Campus do
+  @moduledoc """
+  Data representing a particular UNM campus location.
+
+  This does not necessarily represent a physical location, as
+  UNM has an "Online & ITV" campus for fully online classes.
+
+  Has a uniquely identifying code and a name.
+  """
+
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
 
@@ -6,7 +15,16 @@ defmodule UnmClassScheduler.Catalog.Campus do
 
   import Ecto.Changeset
 
+  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
   alias UnmClassScheduler.Catalog.Building
+
+  @type t :: %__MODULE__{
+    uuid: String.t(),
+    code: String.t(),
+    name: String.t(),
+    inserted_at: NaiveDateTime.t(),
+    updated_at: NaiveDateTime.t(),
+  }
 
   schema "campuses" do
     field :code, :string
@@ -17,19 +35,33 @@ defmodule UnmClassScheduler.Catalog.Campus do
     timestamps()
   end
 
+  @doc """
+  Validates given data without creating a Schema.
+
+  Campuses have no parent associations, so anything passed to those is ignored.
+
+  ## Examples
+      iex> UnmClassScheduler.Catalog.Campus.validate_data(%{code: "CAM", name: "Test Campus"})
+      {:ok, %{code: "CAM", name: "Test Campus"}}
+
+      iex> UnmClassScheduler.Catalog.Campus.validate_data(%{"code" => "CAM", "name" => "Test Campus"})
+      {:ok, %{code: "CAM", name: "Test Campus"}}
+
+      iex> UnmClassScheduler.Catalog.Campus.validate_data(%{code: "CAM", name: "Test Campus", extra: "value"})
+      {:ok, %{code: "CAM", name: "Test Campus"}}
+
+      iex> UnmClassScheduler.Catalog.Campus.validate_data(%{code: "CAM"})
+      {:error, [name: {"can't be blank", [{:validation, :required}]}]}
+  """
+  @spec validate_data(map(), any()) :: {:ok, map()} | {:error, [{atom(), Ecto.Changeset.error()}]}
   @impl true
   def validate_data(params, _associations \\ []) do
-    data = %{}
     types = %{code: :string, name: :string}
-    cs = {data, types}
+
+    {%{}, types}
     |> cast(params, [:code, :name])
     |> validate_required([:code, :name])
-
-    if cs.valid? do
-      {:ok, apply_changes(cs)}
-    else
-      {:error, cs.errors}
-    end
+    |> SchemaUtils.apply_changeset_if_valid()
   end
 
   @impl true

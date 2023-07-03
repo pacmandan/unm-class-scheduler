@@ -1,14 +1,34 @@
 defmodule UnmClassScheduler.Catalog.Department do
+  @moduledoc """
+  Data representing a particular "Department" at UNM.
+
+  UNM groups its Subjects into Departments, which are further grouped into Colleges.
+
+  Has a uniquely identifying code and a name.
+  """
+
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
-  @behaviour UnmClassScheduler.Schema.Child
+  @behaviour UnmClassScheduler.Schema.HasParent
 
   use UnmClassScheduler.Schema
 
   import Ecto.Changeset
 
+  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
   alias UnmClassScheduler.Catalog.College
   alias UnmClassScheduler.Catalog.Subject
+
+  @type t :: %__MODULE__{
+    uuid: String.t(),
+    code: String.t(),
+    name: String.t(),
+    college: College.t(),
+    college_uuid: String.t(),
+    subjects: list(Subject.t()),
+    inserted_at: NaiveDateTime.t(),
+    updated_at: NaiveDateTime.t(),
+  }
 
   schema "departments" do
     field :code, :string
@@ -20,19 +40,35 @@ defmodule UnmClassScheduler.Catalog.Department do
     timestamps()
   end
 
+  @doc """
+  Validates given data without creating a Schema.=
+
+  Departments have a parent College association. The UUID from this association
+  gets applied to the input params as `:college_uuid`.
+
+  ## Examples
+      iex> UnmClassScheduler.Catalog.Department.validate_data(
+      ...>   %{code: "DEP", name: "Test Department"},
+      ...>   college: %UnmClassScheduler.Catalog.College{uuid: "COL12345"}
+      ...> )
+      {:ok, %{code: "DEP", name: "Test Department", college_uuid: "COL12345"}}
+
+      iex> UnmClassScheduler.Catalog.Department.validate_data(
+      ...>   %{code: "DEP", name: "Test Department"},
+      ...>   college: %UnmClassScheduler.Catalog.College{}
+      ...> )
+      {:error, [college_uuid: {"can't be blank", [validation: :required]}]}
+  """
+  @spec validate_data(map(), [{:college, College.t()}]) :: {:ok, map()} | {:error, [{atom(), Ecto.Changeset.error()}]}
   @impl true
   def validate_data(params, college: college) do
-    data = %{}
     types = %{code: :string, name: :string, college_uuid: :string}
-    cs = {data, types}
-    |> cast(params |> Map.merge(%{college_uuid: college.uuid}), [:code, :name, :college_uuid])
-    |> validate_required([:code, :name])
-
-    if cs.valid? do
-      {:ok, apply_changes(cs)}
-    else
-      {:error, cs.errors}
-    end
+    associations = %{college_uuid: college.uuid}
+    {%{}, types}
+    |> cast(params, [:code, :name])
+    |> cast(associations, [:college_uuid])
+    |> validate_required([:code, :name, :college_uuid])
+    |> SchemaUtils.apply_changeset_if_valid()
   end
 
   @impl true
