@@ -35,6 +35,9 @@ defmodule UnmClassScheduler.Catalog.College do
     timestamps()
   end
 
+  # TODO: Move some of these tests out of doctest and into normal test files.
+  # Anything in doctest should ONLY be relevant for documentation.
+
   @doc """
   Validates given data without creating a Schema.
 

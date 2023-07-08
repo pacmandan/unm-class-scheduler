@@ -25,6 +25,7 @@ defmodule UnmClassScheduler.Catalog.Subject do
     name: String.t(),
     department: Department.t(),
     department_uuid: String.t(),
+    courses: list(Course.t()),
     inserted_at: NaiveDateTime.t(),
     updated_at: NaiveDateTime.t(),
   }

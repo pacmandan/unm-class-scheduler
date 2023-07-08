@@ -1,14 +1,31 @@
 defmodule UnmClassScheduler.Catalog.Course do
+  @moduledoc """
+  Data representing a Course at UNM.
+
+  Each course is uniquely identified by its subject and number.
+  """
+
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
   @behaviour UnmClassScheduler.Schema.HasParent
+
+  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Catalog.Subject
+  alias UnmClassScheduler.Catalog.Section
 
   use UnmClassScheduler.Schema
 
   import Ecto.Changeset
 
-  alias UnmClassScheduler.Catalog.Subject
-  alias UnmClassScheduler.Catalog.Section
+  @type t :: %{
+    number: String.t(),
+    title: String.t(),
+    catalog_description: String.t(),
+    subject: Subject.t(),
+    subject_uuid: String.t(),
+    inserted_at: NaiveDateTime.t(),
+    updated_at: NaiveDateTime.t(),
+  }
 
   schema "courses" do
     field :number, :string
@@ -21,19 +38,35 @@ defmodule UnmClassScheduler.Catalog.Course do
     timestamps()
   end
 
+  @doc """
+  Validates given data without creating a Schema.
+
+  Courses have a parent Subject association. The uuid ffrom this association
+  gets applied to the input params as `:subject_uuid`.
+
+  ## Examples
+      iex> UnmClassScheduler.Catalog.Course.validate_data(
+      ...>   %{number: "123L", title: "Test Course", catalog_description: "This is a test course."},
+      ...>   subject: %UnmClassScheduler.Catalog.Subject{uuid: "SUBJ12345"}
+      ...> )
+      {:ok,  %{number: "123L", title: "Test Course", catalog_description: "This is a test course.", subject_uuid: "SUBJ12345"}}
+
+      iex> UnmClassScheduler.Catalog.Course.validate_data(
+      ...>   %{number: "123L", title: "Test Course"},
+      ...>   subject: %UnmClassScheduler.Catalog.Subject{}
+      ...> )
+      {:error, [subject_uuid: {"can't be blank", [validation: :required]}]}
+  """
+  @spec validate_data(map(), [{:subject, Subject.t()}]) :: {:ok, map()} | {:error, [{atom(), Ecto.Changeset.error()}]}
   @impl true
   def validate_data(params, subject: subject) do
-    data = %{}
     types = %{number: :string, title: :string, catalog_description: :string, subject_uuid: :string}
-    cs = {data, types}
-    |> cast(params |> Map.merge(%{subject_uuid: subject.uuid}), [:number, :title, :catalog_description, :subject_uuid])
-    |> validate_required([:number, :title])
-
-    if cs.valid? do
-      {:ok, apply_changes(cs)}
-    else
-      {:error, cs.errors}
-    end
+    associations = %{subject_uuid: subject.uuid}
+    {%{}, types}
+    |> cast(params, [:number, :title, :catalog_description])
+    |> cast(associations, [:subject_uuid])
+    |> validate_required([:number, :title, :subject_uuid])
+    |> SchemaUtils.apply_changeset_if_valid()
   end
 
   @impl true
