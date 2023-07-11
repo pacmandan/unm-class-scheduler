@@ -17,7 +17,8 @@ defmodule UnmClassScheduler.Catalog.Course do
 
   import Ecto.Changeset
 
-  @type t :: %{
+  @type t :: %__MODULE__{
+    uuid: String.t(),
     number: String.t(),
     title: String.t(),
     catalog_description: String.t(),
@@ -26,6 +27,15 @@ defmodule UnmClassScheduler.Catalog.Course do
     inserted_at: NaiveDateTime.t(),
     updated_at: NaiveDateTime.t(),
   }
+
+  @type valid_params :: %{
+    code: String.t(),
+    name: String.t(),
+  }
+
+  @type valid_associations :: [
+    {:subject, Subject.t()}
+  ]
 
   schema "courses" do
     field :number, :string
@@ -57,15 +67,20 @@ defmodule UnmClassScheduler.Catalog.Course do
       ...> )
       {:error, [subject_uuid: {"can't be blank", [validation: :required]}]}
   """
-  @spec validate_data(map(), [{:subject, Subject.t()}]) :: {:ok, map()} | {:error, [{atom(), Ecto.Changeset.error()}]}
+  @spec validate_data(valid_params(), valid_associations()) :: SchemaUtils.maybe_valid_changes()
   @impl true
   def validate_data(params, subject: subject) do
-    types = %{number: :string, title: :string, catalog_description: :string, subject_uuid: :string}
-    associations = %{subject_uuid: subject.uuid}
+    types = %{
+      number: :string,
+      title: :string,
+      catalog_description: :string,
+      subject_uuid: :string
+    }
+
     {%{}, types}
     |> cast(params, [:number, :title, :catalog_description])
-    |> cast(associations, [:subject_uuid])
-    |> validate_required([:number, :title, :subject_uuid])
+    |> validate_required([:number, :title])
+    |> SchemaUtils.apply_association_uuids(%{subject_uuid: subject})
     |> SchemaUtils.apply_changeset_if_valid()
   end
 

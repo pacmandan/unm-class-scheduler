@@ -1,12 +1,46 @@
 defmodule UnmClassScheduler.Catalog.Crosslist do
+  @moduledoc """
+  Data representing a section crosslist.
+
+  Some Sections are "crosslisted" as other sections. Meaning that sometimes
+  the same section is listed twice under different numbers. This crosslist
+  keeps track of these multiple listings.
+
+  `section` is the section listed, and `crosslist` is the _other_ section
+  that this section is crosslisted as.
+  """
+
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
+
+  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Catalog.Section
 
   use UnmClassScheduler.Schema
 
   import Ecto.Changeset
 
-  alias UnmClassScheduler.Catalog.Section
+  @type t :: %__MODULE__{
+    uuid: String.t(),
+    section: Section.t(),
+    section_uuid: String.t(),
+    crosslist: Section.t(),
+    crosslist_uuid: String.t(),
+    inserted_at: NaiveDateTime.t(),
+    updated_at: NaiveDateTime.t(),
+  }
+
+  @type valid_params :: %{
+    course_number: String.t(),
+    subject_code: String.t(),
+  }
+
+  @type valid_associations :: [
+    {:section, Section.t()},
+    {:crosslist, maybe_section()},
+  ]
+
+  @typep maybe_section :: Section.t() | nil
 
   schema "crosslists" do
     belongs_to :section, Section, references: :uuid, foreign_key: :section_uuid
@@ -15,47 +49,82 @@ defmodule UnmClassScheduler.Catalog.Crosslist do
     timestamps()
   end
 
+  @doc """
+  Validates given data without creating a Schema.
+
+  Only the `section` and `crosslist` associations are used for the returned data.
+  It is also expected that the `section` and `crosslist` parameters have had their
+  `course` and `course.subject` associations preloaded before being used here.
+
+  The expected `params` to give are `%{course_number: c, subject_code: s}`.
+  While these parameters are not used in the actual data (yet, I might add it in the future),
+  they are used in validating if the `crosslist` is the correct crosslist.
+
+  There are some crosslists in the original data that are just...incorrect.
+  Crosslists in the original data show both the section number crosslist, as well
+  as the relevant course number and subject code. Sometimes these simply don't line up.
+
+  In that case, even if the given crosslist has a UUID, this validation may still throw an error
+  if course number and subject code given in params don't match it.
+
+  ## Examples
+      iex> UnmClassScheduler.Catalog.Crosslist.validate_data(
+      ...>   %{course_number: "123L", subject_code: "SUBJ"},
+      ...>   section: %UnmClassScheduler.Catalog.Section{uuid: "SEC12345"},
+      ...>   crosslist: %UnmClassScheduler.Catalog.Section{
+      ...>     uuid: "SEC67890",
+      ...>     course: %UnmClassScheduler.Catalog.Course{
+      ...>       number: "123L",
+      ...>       subject: %UnmClassScheduler.Catalog.Subject{
+      ...>         code: "SUBJ"
+      ...>       }
+      ...>     }
+      ...>   }
+      ...> )
+      {:ok, %{section_uuid: "SEC12345", crosslist_uuid: "SEC67890"}}
+
+      iex> UnmClassScheduler.Catalog.Crosslist.validate_data(
+      ...>   %{course_number: "123L", subject_code: "SUBJ"},
+      ...>   section: %UnmClassScheduler.Catalog.Section{uuid: "SEC12345"},
+      ...>   crosslist: nil
+      ...> )
+      {:error, [crosslist_uuid: {"can't be blank", [validation: :required]}]}
+  """
+  @spec validate_data(valid_params(), valid_associations()) :: SchemaUtils.maybe_valid_changes()
   @impl true
   def validate_data(params, section: %Section{} = section, crosslist: crosslist) do
-    data = %{}
     types = %{
       section_uuid: :string,
       crosslist_uuid: :string,
     }
 
-    all_params = %{
-      section_uuid: section.uuid,
-    }
+    section_params = %{section_uuid: section.uuid}
 
-    cs = {data, types}
-    |> cast(all_params, Map.keys(types))
-
-    cs = if crosslist_exists?(params, crosslist) do
-      cs
-      |> cast(%{crosslist_uuid: crosslist.uuid}, Map.keys(types))
-      |> validate_required([:section_uuid, :crosslist_uuid])
-    else
-      add_error(cs, :crosslist, "does not exist")
-    end
-
-    if cs.valid? do
-      {:ok, apply_changes(cs)}
-    else
-      {:error, cs.errors}
-    end
+    {%{}, types}
+    |> cast(section_params, [:section_uuid])
+    |> maybe_apply_crosslist(params, crosslist)
+    |> validate_required([:section_uuid, :crosslist_uuid])
+    |> SchemaUtils.apply_changeset_if_valid()
   end
 
-  defp crosslist_exists?(%{course_number: c, subject_code: s}, crosslist) do
+  defp maybe_apply_crosslist(changeset, _, nil) do
+    # add_error(changeset, :crosslist, "A valid crosslist is required.")
+    changeset
+  end
+
+  defp maybe_apply_crosslist(changeset, %{course_number: c, subject_code: s}, crosslist) do
     cond do
-      is_nil(crosslist) ->
-        false
-      # So, it turns out, sometimes crosslists reference things that don't exist?
-      # Fortunately they also list the course number and subject code in the crosslist,
-      # so this serves to double-check the crosslisted section we found via CRN.
+      !Ecto.assoc_loaded?(crosslist.course) ->
+        # add_error(changeset, :crosslist, "The crosslist Course and Subject must be preloaded.")
+        changeset
+      !Ecto.assoc_loaded?(crosslist.course.subject) ->
+        # add_error(changeset, :crosslist, "The crosslist Course and Subject must be preloaded.")
+        changeset
       crosslist.course.number != c or crosslist.course.subject.code != s ->
-        false
+        # add_error(changeset, :crosslist, "The given crosslist does not match the given params.")
+        changeset
       true ->
-        true
+        cast(changeset, %{crosslist_uuid: crosslist.uuid}, [:crosslist_uuid])
     end
   end
 

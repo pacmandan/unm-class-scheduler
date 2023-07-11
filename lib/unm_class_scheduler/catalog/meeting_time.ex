@@ -1,6 +1,65 @@
 defmodule UnmClassScheduler.Catalog.MeetingTime do
+  @moduledoc """
+  Data representing a specific time, place, and weekdays.
+
+  Each section has multiple meeting times associated.
+  The "index" on each meeting time is the index as it relates to the linked section.
+  """
+
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
+
+  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Catalog.Section
+  alias UnmClassScheduler.Catalog.Building
+
+  use UnmClassScheduler.Schema
+
+  import Ecto.Changeset
+
+  @type t :: %__MODULE__{
+    uuid: String.t(),
+    start_date: Date.t(),
+    end_date: Date.t(),
+    start_time: Time.t(),
+    end_time: Time.t(),
+    sunday: boolean(),
+    monday: boolean(),
+    tuesday: boolean(),
+    wednesday: boolean(),
+    thursday: boolean(),
+    friday: boolean(),
+    saturday: boolean(),
+    room: String.t(),
+    index: integer(),
+    section: Section.t(),
+    section_uuid: String.t(),
+    building: Building.t(),
+    building_uuid: String.t(),
+    inserted_at: NaiveDateTime.t(),
+    updated_at: NaiveDateTime.t(),
+  }
+
+  @type valid_params :: %{
+    start_date: Date.t(),
+    end_date: Date.t(),
+    start_time: Time.t(),
+    end_time: Time.t(),
+    sunday: boolean(),
+    monday: boolean(),
+    tuesday: boolean(),
+    wednesday: boolean(),
+    thursday: boolean(),
+    friday: boolean(),
+    saturday: boolean(),
+    room: String.t(),
+    index: integer(),
+  }
+
+  @type valid_associations :: [
+    {:section, Section.t()},
+    {:building, Building.t()},
+  ]
 
   @day_mapping %{
     sunday: "U",
@@ -14,13 +73,6 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
 
   @inverse_day_mapping @day_mapping
     |> Map.new(fn {atom, string} -> {string, atom} end)
-
-  use UnmClassScheduler.Schema
-
-  import Ecto.Changeset
-
-  alias UnmClassScheduler.Catalog.Section
-  alias UnmClassScheduler.Catalog.Building
 
   schema "meeting_times" do
     field :start_date, :date
@@ -52,9 +104,15 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
     |> Enum.into(%{})
   end
 
+  @doc """
+  Validates given data without creating a Schema.
+
+  ## Examples
+  """
+  # TODO: Examples
+  @spec validate_data(valid_params(), valid_associations()) :: SchemaUtils.maybe_valid_changes()
   @impl true
   def validate_data(params, section: section, building: building) do
-    data = %{}
     types = %{
       start_date: :date,
       end_date: :date,
@@ -73,23 +131,8 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
       index: :integer,
     }
 
-    all_params =
-      if is_nil(building) do
-        params
-        |> Map.merge(%{
-          section_uuid: section.uuid,
-        })
-      else
-        params
-        |> Map.merge(%{
-          section_uuid: section.uuid,
-          building_uuid: building.uuid,
-        })
-      end
-
-
-    cs = {data, types}
-    |> cast(all_params, Map.keys(types))
+    {%{}, types}
+    |> cast(params, Map.keys(types))
     |> validate_required([
       :sunday,
       :monday,
@@ -100,15 +143,10 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
       :saturday,
       :start_date,
       :end_date,
-      :section_uuid,
       :index,
     ])
-
-    if cs.valid? do
-      {:ok, apply_changes(cs)}
-    else
-      {:error, cs.errors}
-    end
+    |> SchemaUtils.apply_association_uuids(%{section_uuid: section}, %{building_uuid: building})
+    |> SchemaUtils.apply_changeset_if_valid()
   end
 
   @impl true

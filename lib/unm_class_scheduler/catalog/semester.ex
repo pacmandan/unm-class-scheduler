@@ -22,6 +22,11 @@ defmodule UnmClassScheduler.Catalog.Semester do
     updated_at: NaiveDateTime.t(),
   }
 
+  @type valid_params :: %{
+    code: String.t(),
+    name: String.t(),
+  }
+
   schema "semesters" do
     field :code, :string
     field :name, :string
@@ -47,7 +52,7 @@ defmodule UnmClassScheduler.Catalog.Semester do
       iex> UnmClassScheduler.Catalog.Semester.validate_data(%{code: "TEST"})
       {:error, [name: {"can't be blank", [{:validation, :required}]}]}
   """
-  @spec validate_data(map(), any()) :: {:ok, map()} | {:error, [{atom(), Ecto.Changeset.error()}]}
+  @spec validate_data(valid_params(), any()) :: SchemaUtils.maybe_valid_changes()
   @impl true
   def validate_data(params, _associations \\ []) do
     types = %{code: :string, name: :string}

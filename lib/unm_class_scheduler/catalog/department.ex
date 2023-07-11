@@ -30,6 +30,15 @@ defmodule UnmClassScheduler.Catalog.Department do
     updated_at: NaiveDateTime.t(),
   }
 
+  @type valid_params :: %{
+    code: String.t(),
+    name: String.t(),
+  }
+
+  @type valid_associations :: [
+    {:college, College.t()}
+  ]
+
   schema "departments" do
     field :code, :string
     field :name, :string
@@ -59,15 +68,14 @@ defmodule UnmClassScheduler.Catalog.Department do
       ...> )
       {:error, [college_uuid: {"can't be blank", [validation: :required]}]}
   """
-  @spec validate_data(map(), [{:college, College.t()}]) :: {:ok, map()} | {:error, [{atom(), Ecto.Changeset.error()}]}
+  @spec validate_data(valid_params(), valid_associations()) :: SchemaUtils.maybe_valid_changes()
   @impl true
   def validate_data(params, college: college) do
     types = %{code: :string, name: :string, college_uuid: :string}
-    associations = %{college_uuid: college.uuid}
     {%{}, types}
     |> cast(params, [:code, :name])
-    |> cast(associations, [:college_uuid])
-    |> validate_required([:code, :name, :college_uuid])
+    |> validate_required([:code, :name])
+    |> SchemaUtils.apply_association_uuids(%{college_uuid: college})
     |> SchemaUtils.apply_changeset_if_valid()
   end
 
