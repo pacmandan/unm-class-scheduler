@@ -3,20 +3,20 @@ interface Coded {
     name: string;
 }
 
-interface Semester extends Coded {}
-interface Subject extends Coded {}
-interface Campus extends Coded {}
-interface Building extends Coded {}
+export interface Semester extends Coded {}
+export interface Subject extends Coded {}
+export interface Campus extends Coded {}
+export interface Building extends Coded {}
 
-interface Course {
+export interface Course {
     number: string;
     title: string;
     subject: Subject;
 }
 
-type Day = 'U' | 'M' | 'T' | 'W' | 'R' | 'F' | 'S'
+export type Day = 'U' | 'M' | 'T' | 'W' | 'R' | 'F' | 'S'
 
-interface MeetingTime {
+export interface MeetingTime {
     days: Array<Day>;
     start_time: string;
     end_time: string;
@@ -24,7 +24,7 @@ interface MeetingTime {
     room: string;
 }
 
-interface Instructor {
+export interface Instructor {
     primary: boolean;
     first: string;
     last: string;
@@ -32,10 +32,10 @@ interface Instructor {
     email: string;
 }
 
-type Crn = string;
+export type Crn = string;
 
 // TODO: Alphabetize (or in some way sort) these later
-interface Section {
+export interface Section {
     course: Course;
     campus: Campus;
     semester: Semester;
