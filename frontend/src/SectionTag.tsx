@@ -77,7 +77,7 @@ const SectionTag = ({section}: {section: Section}) => {
                     {formatTime(meeting_time.start_time)} - {formatTime(meeting_time.end_time)}
                 </div>
                 <div className='flex'>
-                    <div className='ml-2 mt-1 leading-6 w-[100px]' title={`${meeting_time.building.name} ${meeting_time.room}`}>
+                    <div className='ml-1 mt-1 leading-6 w-[100px]' title={`${meeting_time.building.name} ${meeting_time.room}`}>
                         {meeting_time.building.code} {meeting_time.room}
                     </div>
                     <div className='mt-1 mr-3'>|</div>
