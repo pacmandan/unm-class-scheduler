@@ -7,6 +7,10 @@ export interface Semester extends Coded {}
 export interface Subject extends Coded {}
 export interface Campus extends Coded {}
 export interface Building extends Coded {}
+export interface PartOfTerm extends Coded {}
+export interface Status extends Coded {}
+export interface DeliveryType extends Coded {}
+export interface InstructionalMethod extends Coded {}
 
 export interface Course {
     number: string;
@@ -44,15 +48,15 @@ export interface Section {
     number: string;
     crn: Crn;
     crosslists: Array<Crn>;
-    part_of_term: string;
-    instructional_method: string;
-    delivery_type: string;
+    part_of_term: PartOfTerm;
+    instructional_method: InstructionalMethod;
+    delivery_type: DeliveryType;
     credits: number;
     enrollment: number;
     enrollment_max: number;
     waitlist: number;
     waitlist_max: number;
     catalog_description: string;
-    status: string;
-    fees?: string;
+    status: Status;
+    fees?: number;
 }
