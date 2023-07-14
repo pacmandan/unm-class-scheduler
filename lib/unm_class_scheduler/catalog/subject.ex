@@ -10,6 +10,7 @@ defmodule UnmClassScheduler.Catalog.Subject do
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
   @behaviour UnmClassScheduler.Schema.HasParent
+  @behaviour UnmClassScheduler.Schema.Serializable
 
   alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
   alias UnmClassScheduler.Catalog.Department
@@ -90,4 +91,14 @@ defmodule UnmClassScheduler.Catalog.Subject do
 
   @impl true
   def conflict_keys(), do: :code
+
+  @spec serialize(__MODULE__.t()) :: map()
+  @impl true
+  def serialize(nil), do: nil
+  def serialize(subject) do
+    %{
+      code: subject.code,
+      name: subject.name,
+    }
+  end
 end

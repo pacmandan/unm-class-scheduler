@@ -319,6 +319,7 @@ defmodule UnmClassScheduler.ScheduleParser.XMLExtractor do
           Subject => %{code: c[Subject].fields[:code]},
           Course => %{number: c[Course].fields[:number]},
           Semester => %{code: c[Semester].fields[:code]},
+          Campus => %{code: c[Campus].fields[:code]},
           PartOfTerm => %{code: fields[:part_of_term_code]},
           Status => %{code: fields[:status_code]},
         },

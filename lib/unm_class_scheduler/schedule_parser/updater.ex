@@ -199,12 +199,14 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
         status = get_in(cache, [Status, a[Status][:code]])
         delivery_type = get_in(cache, [DeliveryType, a[DeliveryType][:code]])
         instructional_method = get_in(cache, [InstructionalMethod, a[InstructionalMethod][:code]])
+        campus = get_in(cache, [Campus, a[Campus][:code]])
         # TODO: Raise an error if part_of_term, status, delivery_type, or instructional method are unknown.
         # We need to update the database seeds in that case. (I guess a data migration?)
         {:ok, valid_f} = Section.validate_data(
           f,
           course: course,
           semester: semester,
+          campus: campus,
           part_of_term: part_of_term,
           status: status,
           delivery_type: delivery_type,

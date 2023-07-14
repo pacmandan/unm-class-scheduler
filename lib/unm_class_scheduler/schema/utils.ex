@@ -56,4 +56,13 @@ defmodule UnmClassScheduler.Schema.Utils do
     |> Ecto.Changeset.cast(optional_uuids, Map.keys(optional_associations))
     |> Ecto.Changeset.validate_required(Map.keys(associations))
   end
+
+  @doc """
+  Equivalent to .dig() in Ruby.
+  """
+  def maybe(nil, _keys), do: nil
+  def maybe(val, []), do: val
+  def maybe(map, [h|t]) do
+    maybe(Map.get(map, h), t)
+  end
 end

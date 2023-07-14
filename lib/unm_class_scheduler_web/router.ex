@@ -14,6 +14,11 @@ defmodule UnmClassSchedulerWeb.Router do
     plug :accepts, ["json"]
   end
 
+  scope "/api", UnmClassSchedulerWeb do
+    pipe_through :api
+    get "/", SearchController, :get
+  end
+
   scope "/", UnmClassSchedulerWeb do
     pipe_through :browser
 

@@ -8,6 +8,7 @@ defmodule UnmClassScheduler.Catalog.Course do
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
   @behaviour UnmClassScheduler.Schema.HasParent
+  @behaviour UnmClassScheduler.Schema.Serializable
 
   alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
   alias UnmClassScheduler.Catalog.Subject
@@ -113,4 +114,15 @@ defmodule UnmClassScheduler.Catalog.Course do
   #       INNER JOIN departments ON (subjects.department_uuid = departments.uuid)
   #       INNER JOIN colleges ON (departments.college_uuid = colleges.uuid);
   #   """
+
+  @spec serialize(__MODULE__.t()) :: map()
+  @impl true
+  def serialize(nil), do: nil
+  def serialize(course) do
+    %{
+      number: course.number,
+      title: course.title,
+      catalog_description: course.catalog_description,
+    }
+  end
 end

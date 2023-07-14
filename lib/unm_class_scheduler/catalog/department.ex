@@ -10,6 +10,7 @@ defmodule UnmClassScheduler.Catalog.Department do
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
   @behaviour UnmClassScheduler.Schema.HasParent
+  @behaviour UnmClassScheduler.Schema.Serializable
 
   use UnmClassScheduler.Schema
 
@@ -90,4 +91,14 @@ defmodule UnmClassScheduler.Catalog.Department do
 
   @impl true
   def conflict_keys(), do: :code
+
+  @spec serialize(__MODULE__.t()) :: map()
+  @impl true
+  def serialize(nil), do: nil
+  def serialize(data) do
+    %{
+      code: data.code,
+      name: data.name,
+    }
+  end
 end
