@@ -354,7 +354,7 @@ defmodule UnmClassScheduler.ScheduleParser.XMLExtractor do
   def handle_event(:characters, chars,
     %{current: %{Section => section, text: true} = c} = state
   ) do
-    ex = ExtractedItem.push_fields(section, %{text: chars})
+    ex = ExtractedItem.push_fields(section, %{text: String.trim(chars)})
     {:ok, state |> Map.put(:current, update_current(c, Section, ex))}
   end
 

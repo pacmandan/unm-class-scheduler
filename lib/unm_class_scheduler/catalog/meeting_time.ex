@@ -8,6 +8,7 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
 
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
+  @behaviour UnmClassScheduler.Schema.Serializable
 
   alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
   alias UnmClassScheduler.Catalog.Section
@@ -156,4 +157,37 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
     :start_date,
     :end_date,
   ]
+
+  @spec serialize_days_list(__MODULE__.t()) :: list(String.t())
+  defp serialize_days_list(meeting_time) do
+    Map.take(meeting_time, Map.keys(@day_mapping))
+    |> Enum.reduce([], fn {day, available}, acc ->
+      if available do
+        [@day_mapping[day] | acc]
+      else
+        acc
+      end
+    end)
+  end
+
+  @spec serialize(__MODULE__.t()) :: map()
+  @impl true
+  def serialize(meeting_time) do
+    %{
+      start_date: meeting_time.start_date,
+      end_date: meeting_time.end_date,
+      start_time: meeting_time.start_time,
+      end_time: meeting_time.end_time,
+      sunday: meeting_time.sunday,
+      monday: meeting_time.monday,
+      tuesday: meeting_time.tuesday,
+      wednesday: meeting_time.wednesday,
+      thursday: meeting_time.thursday,
+      friday: meeting_time.friday,
+      saturday: meeting_time.saturday,
+      room: meeting_time.room,
+      days: serialize_days_list(meeting_time),
+      building: Building.serialize(meeting_time.building)
+    }
+  end
 end

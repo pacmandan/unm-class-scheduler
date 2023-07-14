@@ -8,6 +8,7 @@ defmodule UnmClassScheduler.Catalog.InstructorSection do
 
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
+  @behaviour UnmClassScheduler.Schema.Serializable
 
   alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
   alias UnmClassScheduler.Catalog.Section
@@ -76,4 +77,11 @@ defmodule UnmClassScheduler.Catalog.InstructorSection do
 
   @impl true
   def conflict_keys(), do: [:section_uuid, :instructor_uuid]
+
+  @spec serialize(__MODULE__.t()) :: map()
+  @impl true
+  def serialize(instructor_section) do
+    %{primary: instructor_section.primary}
+    |> Map.merge(Instructor.serialize(instructor_section.instructor))
+  end
 end

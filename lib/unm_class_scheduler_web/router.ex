@@ -16,7 +16,7 @@ defmodule UnmClassSchedulerWeb.Router do
 
   scope "/api", UnmClassSchedulerWeb do
     pipe_through :api
-    get "/", SearchController, :get
+    get "/search", SearchController, :get
   end
 
   scope "/", UnmClassSchedulerWeb do

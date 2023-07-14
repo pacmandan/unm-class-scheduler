@@ -203,6 +203,15 @@ defmodule UnmClassScheduler.Catalog.Section do
       status: Status.serialize(section.status),
       delivery_type: DeliveryType.serialize(section.delivery_type),
       instructional_method: InstructionalMethod.serialize(section.instructional_method),
+      instructors: Enum.map(section.instructors || [], &InstructorSection.serialize/1),
+      meeting_times: Enum.map(section.meeting_times, &MeetingTime.serialize/1),
+      crosslists: Enum.map(section.crosslists || [], fn s ->
+        %{
+          crn: s.crn,
+          course: Course.serialize(s.course),
+          subject: Subject.serialize(SchemaUtils.maybe(s, [:course, :subject]))
+        }
+      end),
     }
   end
 end

@@ -8,6 +8,7 @@ defmodule UnmClassScheduler.Catalog.Instructor do
 
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
+  @behaviour UnmClassScheduler.Schema.Serializable
 
   alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
   alias UnmClassScheduler.Catalog.InstructorSection
@@ -80,4 +81,15 @@ defmodule UnmClassScheduler.Catalog.Instructor do
   # Emails are not unique - some instructors are listed as "No UNM email address"
   @impl true
   def conflict_keys(), do: [:email, :first, :last]
+
+  @spec serialize(__MODULE__.t()) :: map()
+  @impl true
+  def serialize(instructor) do
+    %{
+      first: instructor.first,
+      last: instructor.last,
+      middle_initial: instructor.middle_initial,
+      email: instructor.email,
+    }
+  end
 end

@@ -9,45 +9,19 @@ defmodule UnmClassScheduler.Api.Search do
 
   import Ecto.Query
 
-  @spec find_sections(map()) :: list(map())
-  def find_sections(params) do
-    # q = from s in Section,
-    #   left_join: sem in assoc(s, :semester),
-    #   left_join: c in assoc(s, :course),
-    #   left_join: campus in assoc(s, :campus),
-    #   left_join: subj in assoc(c, :subject),
-    #   join: mt in assoc(s, :meeting_times),
-    #   left_join: bldg in assoc(mt, :building),
-    #   join: is in assoc(s, :instructors),
-    #   left_join: i in assoc(is, :instructor),
-    #   left_join: crosslists in assoc(s, :crosslists),
-    #   left_join: status in assoc(s, :status),
-    #   left_join: part_of_term in assoc(s, :part_of_term),
-    #   left_join: instructional_method in assoc(s, :instructional_method),
-    #   left_join: delivery_type in assoc(s, :delivery_type),
-    #   # Can't combine a preload with a limit.
-    #   # The limit applies to _all_ loaded results, not just the Sections table.
-    #   # preload: [
-    #   #   semester: sem,
-    #   #   campus: campus,
-    #   #   course: {c, subject: subj},
-    #   #   meeting_times: {mt, building: bldg},
-    #   #   instructors: {is, instructor: i},
-    #   #   crosslists: crosslists,
-    #   #   part_of_term: part_of_term,
-    #   #   status: status,
-    #   #   instructional_method: instructional_method,
-    #   #   delivery_type: delivery_type
-    #   #   ],
-    #   where: (sem.code == "202310" and subj.code == "CS" and campus.code == "ABQ"),
-    #   order_by: c.number,
-    #   limit: 15
+  @default_opts %{
+    per_page: 10,
+    page: 0,
+  }
 
+  @spec find_sections(map(), map()) :: list(map())
+  def find_sections(params, opts \\ %{}) do
     # Params are reduced and pattern matched, adding joins and wheres only as necessary.
+    opts = @default_opts |> Map.merge(opts) |> Map.take([:page, :per_page])
     params
     |> Enum.reduce(Section, &find_sections_by/2)
-    # TODO: Make limit and offest into opts
-    |> limit([s], 15)
+    |> limit([s], ^opts.per_page)
+    |> offset(^(opts.page * opts.per_page))
     |> Repo.all()
     |> Repo.preload([
       :part_of_term,
@@ -58,7 +32,8 @@ defmodule UnmClassScheduler.Api.Search do
       :semester,
       instructors: :instructor,
       meeting_times: :building,
-      course: [subject: [department: :college]]
+      course: [subject: [department: :college]],
+      crosslists: [course: :subject]
     ])
     |> Enum.map(&Section.serialize/1)
   end
@@ -85,6 +60,11 @@ defmodule UnmClassScheduler.Api.Search do
     q
     |> join_course()
     |> where([section, course: course], course.number == ^number)
+  end
+
+  defp find_sections_by({:crn, crn}, q) do
+    q
+    |> where([section], section.crn == ^crn)
   end
 
   defp find_sections_by(_unknown_key, q), do: q

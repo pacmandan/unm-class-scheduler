@@ -12,6 +12,7 @@ defmodule UnmClassScheduler.Catalog.Building do
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
   @behaviour UnmClassScheduler.Schema.HasParent
+  @behaviour UnmClassScheduler.Schema.Serializable
 
   alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
   alias UnmClassScheduler.Catalog.Campus
@@ -89,4 +90,14 @@ defmodule UnmClassScheduler.Catalog.Building do
 
   @impl true
   def conflict_keys(), do: [:code, :campus_uuid]
+
+  @spec serialize(__MODULE__.t()) :: map()
+  @impl true
+  def serialize(nil), do: nil
+  def serialize(building) do
+    %{
+      code: building.code,
+      name: building.name,
+    }
+  end
 end
