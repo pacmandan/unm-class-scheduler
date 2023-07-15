@@ -1,4 +1,8 @@
-export const formatTime = (time: string) => {
+const formatTimeSeconds = (time: string) => {
+  return formatTimeNumber(time.split(":").slice(0,2).join(""));
+}
+
+const formatTimeNumber = (time: string) => {
   // Time string format is "HHMM" in 24hr format. I want to return "HH:MM AM/PM" (12hr format).
   // JS only does full Date objects, not just Time, so "Fine. I guess I'll do it myself."
   let hh24 = parseInt(time.slice(0,2));
@@ -14,4 +18,20 @@ export const formatTime = (time: string) => {
   // let hh = hh12 < 10 ? hh12.toString().padStart(2, '0') : hh12.toString();
   let hh = hh12.toString();
   return `${hh}:${mm} ${ampm}`
+}
+
+// TODO: Clean this up to handle both "HHMM" and "HH:MM:SS".
+// This is a bit of a mess.
+export const formatTime = (time: string) => {
+  if (!time) {
+    return null
+  }
+
+  if(time.match(/[0-9][0-9][0-9][0-9]/)) {
+    return formatTimeNumber(time)
+  } else if(time.match(/[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/)) {
+    return formatTimeSeconds(time)
+  } else {
+    return time
+  }
 }

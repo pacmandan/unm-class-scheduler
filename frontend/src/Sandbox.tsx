@@ -2,8 +2,17 @@ import SearchResults from './SearchResults';
 // Wrap this calendar in a component. So we can feed state into it.
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid'
+import { useDispatch } from 'react-redux';
+import { fetchResults } from './features/search';
+import { useEffect } from 'react';
+import { AppDispatch } from './store';
 
 const Sandbox = () => {
+  const dispatch = useDispatch<AppDispatch>()
+
+  useEffect(() => {
+    dispatch(fetchResults({}))
+  }, [])
   return (<div>
     <h1>Sandbox!</h1><br/>
     <div className='flex-auto bg-red-950 h-auto w-auto'>

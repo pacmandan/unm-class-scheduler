@@ -3,11 +3,11 @@
         {
             "course": {
                 "number": "105L",
-                "title": "Intro to Computer Programming",
-                "subject": {
-                    "code": "CS",
-                    "name": "Computer Science"
-                }
+                "title": "Intro to Computer Programming"
+            },
+            "subject": {
+                "code": "CS",
+                "name": "Computer Science"
             },
             "campus": {
                 "code": "ABQ",
@@ -72,11 +72,11 @@
         },{
             "course": {
                 "number": "1512",
-                "title": "Calculus I",
-                "subject": {
-                    "code": "MATH",
-                    "name": "Mathmatics"
-                }
+                "title": "Calculus I"
+            },
+            "subject": {
+                "code": "MATH",
+                "name": "Mathmatics"
             },
             "campus": {
                 "code": "ABQ",

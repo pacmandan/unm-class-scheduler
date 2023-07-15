@@ -15,7 +15,6 @@ export interface InstructionalMethod extends Coded {}
 export interface Course {
     number: string;
     title: string;
-    subject: Subject;
 }
 
 export type Day = 'U' | 'M' | 'T' | 'W' | 'R' | 'F' | 'S'
@@ -41,6 +40,7 @@ export type Crn = string;
 // TODO: Alphabetize (or in some way sort) these later
 export interface Section {
     course: Course;
+    subject: Subject;
     campus: Campus;
     semester: Semester;
     meeting_times: Array<MeetingTime>;

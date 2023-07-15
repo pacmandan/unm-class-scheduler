@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Provider } from 'react-redux'
 import store from './store'
-import App from './App.tsx'
+import App from './App'
 import HomePage from './Home'
 import AboutPage from './About'
 import {
@@ -10,7 +10,7 @@ import {
   RouterProvider,
 } from 'react-router-dom'
 import './index.css'
-import Sandbox from './Sandbox.tsx'
+import Sandbox from './Sandbox'
 
 const router = createBrowserRouter([
   {

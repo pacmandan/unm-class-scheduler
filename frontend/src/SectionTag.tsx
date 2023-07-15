@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Section, Day, MeetingTime, Instructor } from './catalog'
+import { Section, Day, MeetingTime, Instructor, Building } from './catalog'
 // import SectionDetails from './SectionDetails'
 import { formatTime } from './utils'
 
@@ -25,6 +25,17 @@ const all_days: Day[] = ['U', 'M', 'T', 'W', 'R', 'F', 'S']
 //         </div>
 //     </div>)
 // }
+
+const buildingRender = (building: Building, room: String) => {
+    if(!building) {
+        return null;
+    }
+    return (
+        <div className='ml-1 mt-1 leading-6 w-[100px]' title={`${building.name} ${room}`}>
+            {building.code} {room}
+        </div>
+    )
+}
 
 const SectionTag = ({section}: {section: Section}) => {
     const [open, setOpen] = useState(false)
@@ -58,7 +69,7 @@ const SectionTag = ({section}: {section: Section}) => {
             <p className='text-center w-[33%]'>{section.campus.name}</p>
             <p className='text-right w-[33%] font-bold'>{section.crn}</p>
         </div>
-        <div className='text-xl font-bold'>{section.course.subject.code} {section.course.number}.{section.number} - {section.course.title}</div>
+        <div className='text-xl font-bold'>{section.subject.code} {section.course.number}.{section.number} - {section.course.title}</div>
         <div className='flex'>
             <div className='text-left w-[50%]'>{section.part_of_term.name}</div>
             <div className='text-right w-[50%]' title={`Enrolled: ${section.enrollment}/${section.enrollment_max} (Waitlist: ${section.waitlist}/${section.waitlist_max})`}>E: {section.enrollment}/{section.enrollment_max} (W: {section.waitlist}/{section.waitlist_max})</div>
@@ -77,9 +88,7 @@ const SectionTag = ({section}: {section: Section}) => {
                     {formatTime(meeting_time.start_time)} - {formatTime(meeting_time.end_time)}
                 </div>
                 <div className='flex'>
-                    <div className='ml-1 mt-1 leading-6 w-[100px]' title={`${meeting_time.building.name} ${meeting_time.room}`}>
-                        {meeting_time.building.code} {meeting_time.room}
-                    </div>
+                    {buildingRender(meeting_time.building, meeting_time.room)}
                     <div className='mt-1 mr-3'>|</div>
                     <div className='flex'>
                         {all_days.map((day) => {

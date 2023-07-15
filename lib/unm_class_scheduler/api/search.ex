@@ -89,7 +89,9 @@ defmodule UnmClassScheduler.Api.Search do
     if has_named_binding?(q, :course) do
       q
     else
-      q |> join(:left, [section], course in assoc(section, :course), as: :course)
+      q
+      |> join(:left, [section], course in assoc(section, :course), as: :course)
+      |> order_by([s, course: course], asc: course.number)
     end
   end
 
