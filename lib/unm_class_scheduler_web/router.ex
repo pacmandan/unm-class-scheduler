@@ -17,6 +17,11 @@ defmodule UnmClassSchedulerWeb.Router do
   scope "/api", UnmClassSchedulerWeb do
     pipe_through :api
     get "/search", SearchController, :get
+
+    get "/reference/semesters", ReferenceController, :get_semesters
+    get "/reference/subjects", ReferenceController, :get_subjects
+    get "/reference/courses", ReferenceController, :get_courses
+    get "/reference/campuses", ReferenceController, :get_campuses
   end
 
   scope "/", UnmClassSchedulerWeb do

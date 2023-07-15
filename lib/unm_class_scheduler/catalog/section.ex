@@ -195,6 +195,7 @@ defmodule UnmClassScheduler.Catalog.Section do
       credits_max: section.credits_max,
       fees: section.fees,
       text: section.text,
+      semester: Semester.serialize(section.semester),
       campus: Campus.serialize(section.campus),
       course: Course.serialize(section.course),
       subject: Subject.serialize(SchemaUtils.maybe(section, [:course, :subject])),
