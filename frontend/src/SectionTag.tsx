@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Section, Day, MeetingTime, Instructor, Building } from './catalog'
+import { Section, Day, MeetingTime, Instructor, Building, Crosslist } from './catalog'
 // import SectionDetails from './SectionDetails'
 import { formatTime } from './utils'
 
@@ -44,15 +44,15 @@ const SectionTag = ({section}: {section: Section}) => {
         setOpen(!open)
     }
 
-    const displayCrosslists = (crosslists: Array<string>) => {
+    const displayCrosslists = (crosslists: Array<Crosslist>) => {
         if (crosslists.length === 0) {
             return null;
         }
         return (<>
             <br/>
             <div>Crosslist CRNS:</div>
-            {crosslists.map((crn: string) => {
-                return (<div>- {crn}</div>)
+            {crosslists.map((crosslist: Crosslist) => {
+                return (<div>- {crosslist.crn}</div>)
             })}
         </>)
     }
@@ -100,7 +100,7 @@ const SectionTag = ({section}: {section: Section}) => {
         })}
         <button className='font-bold' onClick={toggleDescription}>{open ? "V Hide Description" : "> Show Description"}</button>
         {open && <>
-            <div className='whitespace-pre-wrap'>{section.catalog_description}</div>
+            <div className='whitespace-pre-wrap'>{section.course.catalog_description}</div>
             {displayCrosslists(section.crosslists)}
         </>}
 

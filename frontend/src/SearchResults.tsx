@@ -10,7 +10,7 @@ const SearchResults = ({sections}: {sections: Section[]}) => {
     <table>
       <tbody>
         {sections.map(function(section) {
-          return (<tr><td className='bg-white border-black border-solid border-2'><input type='checkbox'/></td><td><SectionTag section={section} /></td></tr>)
+          return (<tr key={section.crn}><td className='bg-white border-black border-solid border-2'><input type='checkbox'/></td><td><SectionTag section={section} /></td></tr>)
         })}
       </tbody>
     </table>

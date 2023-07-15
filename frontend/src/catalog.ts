@@ -15,6 +15,7 @@ export interface InstructionalMethod extends Coded {}
 export interface Course {
     number: string;
     title: string;
+    catalog_description: string;
 }
 
 export type Day = 'U' | 'M' | 'T' | 'W' | 'R' | 'F' | 'S'
@@ -37,6 +38,12 @@ export interface Instructor {
 
 export type Crn = string;
 
+export type Crosslist = {
+    crn: Crn;
+    subject: string;
+    course: string;
+}
+
 // TODO: Alphabetize (or in some way sort) these later
 export interface Section {
     course: Course;
@@ -47,7 +54,7 @@ export interface Section {
     instructors: Array<Instructor>;
     number: string;
     crn: Crn;
-    crosslists: Array<Crn>;
+    crosslists: Array<Crosslist>;
     part_of_term: PartOfTerm;
     instructional_method: InstructionalMethod;
     delivery_type: DeliveryType;
@@ -56,7 +63,6 @@ export interface Section {
     enrollment_max: number;
     waitlist: number;
     waitlist_max: number;
-    catalog_description: string;
     status: Status;
     fees?: number;
 }

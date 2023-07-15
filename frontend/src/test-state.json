@@ -3,7 +3,8 @@
         {
             "course": {
                 "number": "105L",
-                "title": "Intro to Computer Programming"
+                "title": "Intro to Computer Programming",
+                "catalog_description": "Introduction to Computer Programming is a gentle and fun introduction. Students will use a modern Integrated Development Environment to author small programs in a high level language that do interesting things."
             },
             "subject": {
                 "code": "CS",
@@ -43,7 +44,7 @@
                 "middle": "",
                 "email": "glue500@unm.edu"
             }],
-            "crosslists": ["37993", "37994"],
+            "crosslists": [],
             "number": "001",
             "crn": "37992",
             "part_of_term": {
@@ -63,7 +64,6 @@
             "enrollment_max": 18,
             "waitlist": 0,
             "waitlist_max": 0,
-            "catalog_description": "Introduction to Computer Programming is a gentle and fun introduction. Students will use a modern Integrated Development Environment to author small programs in a high level language that do interesting things.",
             "status": {
                 "code": "A",
                 "name": "Active"
@@ -72,7 +72,8 @@
         },{
             "course": {
                 "number": "1512",
-                "title": "Calculus I"
+                "title": "Calculus I",
+                "catalog_description": "Limits. Continuity. Derivative: definition, rules, geometric interpretation and as rate-of-change, applications to graphing, linearization and optimization. Integral: definition, fundamental theorem of calculus, substitution, applications such as areas, volumes, work, averages.\n\nCredit for both this course and MATH 1430 may not be applied toward a degree program.\n\nMeets New Mexico General Education Curriculum Area 2: Mathematics and Statistics.\n\nPrerequisite: (1230 and 1240) or 1250 or ACT Math >28 or SAT Math Section >640 or ACCUPLACER Next-Generation Advanced Algebra and Functions >284 or Lobo Course Placement Math >70."
             },
             "subject": {
                 "code": "MATH",
@@ -112,7 +113,7 @@
                 "middle": "",
                 "email": "kburns@unm.edu"
             }],
-            "crosslists": ["51530", "51660"],
+            "crosslists": [],
             "number": "001",
             "crn": "51529",
             "part_of_term": {
@@ -132,7 +133,6 @@
             "enrollment_max": 16,
             "waitlist": 0,
             "waitlist_max": 0,
-            "catalog_description": "Limits. Continuity. Derivative: definition, rules, geometric interpretation and as rate-of-change, applications to graphing, linearization and optimization. Integral: definition, fundamental theorem of calculus, substitution, applications such as areas, volumes, work, averages.\n\nCredit for both this course and MATH 1430 may not be applied toward a degree program.\n\nMeets New Mexico General Education Curriculum Area 2: Mathematics and Statistics.\n\nPrerequisite: (1230 and 1240) or 1250 or ACT Math >28 or SAT Math Section >640 or ACCUPLACER Next-Generation Advanced Algebra and Functions >284 or Lobo Course Placement Math >70.",
             "status": {
                 "code": "A",
                 "name": "Active"
