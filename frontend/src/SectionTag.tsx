@@ -5,7 +5,7 @@ import { formatTime } from './utils'
 
 function circle(filled:boolean, letter:string) {
     let colors = filled ? 'bg-red-400 text-black' : 'bg-white text-black'
-    return (<div className={`m-1 w-6 h-6 leading-6 rounded-[50%] text-center ${colors}`}>
+    return (<div key={letter} className={`m-1 w-6 h-6 leading-6 rounded-[50%] text-center ${colors}`}>
         {letter}
     </div>)
 }
@@ -80,10 +80,10 @@ const SectionTag = ({section}: {section: Section}) => {
         </div>
         <div>Instructors:</div>
         {section.instructors.map((instructor: Instructor) => {
-            return(<div className='text-sm ml-1'>{instructorString(instructor)}</div>)
+            return(<div key={instructor.email} className='text-sm ml-1'>{instructorString(instructor)}</div>)
         })}
-        {section.meeting_times.map((meeting_time: MeetingTime) => {
-            return(<>
+        {section.meeting_times.map((meeting_time: MeetingTime, index: number) => {
+            return(<div key={index}>
                 <div className='ml-1 mt-3 leading-4'>
                     {formatTime(meeting_time.start_time)} - {formatTime(meeting_time.end_time)}
                 </div>
@@ -96,7 +96,7 @@ const SectionTag = ({section}: {section: Section}) => {
                         })}
                     </div>
                 </div>
-            </>)
+            </div>)
         })}
         <button className='font-bold' onClick={toggleDescription}>{open ? "V Hide Description" : "> Show Description"}</button>
         {open && <>

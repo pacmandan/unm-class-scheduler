@@ -1,13 +1,38 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { Section, Semester, Campus, Subject } from '../catalog'
-import testData from '../test-state.json'
+import { Section } from '../catalog'
 import client from "../api/client"
 
+interface SearchParams {
+    semester?: string,
+    campus?: string,
+    subject?: string,
+    page?: number,
+    perPage?: number,
+}
+
+// interface ResultsThunkResponse {
+//     results: Section[],
+//     params: SearchParams
+// }
+
+// export const fetchResults = createAsyncThunk<ResultsThunkResponse, SearchParams, {state: RootState, dispatch: AppDispatch}>('search/fetchResults', async (params, thunkApi) => {
+//     const state = thunkApi.getState()
+//     console.log(state)
+//     // TODO: Handle failure
+//     const response = await client.search(params)
+//     return {
+//         results: response.data,
+//         params: params
+//     }
+// })
+
 export const fetchResults = createAsyncThunk('search/fetchResults', async (params: any) => {
-  const response = await client.search(params)
-  console.log("IN THUNK")
-  console.log(response)
-  return response.data
+    // TODO: Handle failure
+    const response = await client.search(params)
+    return {
+        results: response.data,
+        params: params
+    }
 })
 
 /**
@@ -19,28 +44,14 @@ interface SearchState {
     results: Section[],
     page: number,
     perPage: number,
-    reference: {
-        semesters: Semester[],
-        campuses: Campus[],
-        subjects: Subject[],
-    }
-    form: {
-        semester?: string,
-        campus?: string,
-        subject?: string,
-    },
+    lastSearchParams?: SearchParams,
 }
 
 const initialState : SearchState = {
-    results: testData.search_results as Section[],
+    results: [],
     page: 1,
     perPage: 10,
-    reference: {
-        semesters: [],
-        campuses: [],
-        subjects: [],
-    },
-    form: {},
+    lastSearchParams: {},
 }
 
 export const searchSlice = createSlice({
@@ -67,9 +78,8 @@ export const searchSlice = createSlice({
             // Then update the full state to include current page number.
             // Not really sure how I'm going to do total pages...
             // Might want to put some more thought into pagination.
-            console.log("IN REDUCER!")
-            console.log(action.payload)
-            state.results = action.payload
+            state.results = action.payload.results
+            state.lastSearchParams = action.payload.params
             //state.results = action.payload
         })
     }

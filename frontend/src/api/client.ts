@@ -1,17 +1,17 @@
 import axios from 'axios';
 
-const search = (_params : any) => {
+const search = (params : any) => {
   return axios.get("/api/search", {
     params: {
-      semester: "202310",
-      campus: "ABQ",
-      subject: "MATH",
+      semester: params.semester,
+      campus: params.campus,
+      subject: params.subject,
     }
   })
 }
 
 const get_semesters = () => {
-  return axios.get("/api/reference/semseters")
+  return axios.get("/api/reference/semesters")
 }
 
 const get_campuses = () => {

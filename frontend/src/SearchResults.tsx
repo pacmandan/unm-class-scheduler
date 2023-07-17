@@ -6,7 +6,9 @@ import { RootState } from './store';
 const mapStateToProps = (state: RootState) => ({sections: state.search.results})
 
 const SearchResults = ({sections}: {sections: Section[]}) => {
-  return (<div>
+  return (<div className="w-96">
+    <button className="float-left">Prev</button>
+    <button className="float-right">Next</button>
     <table>
       <tbody>
         {sections.map(function(section) {

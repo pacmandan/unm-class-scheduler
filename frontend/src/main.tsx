@@ -11,6 +11,7 @@ import {
 } from 'react-router-dom'
 import './index.css'
 import Sandbox from './Sandbox'
+import { fetchInitReference } from './features/formReference'
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,9 @@ const router = createBrowserRouter([
     element: <Sandbox />
   }
 ]);
+
+// Fetch initial state
+store.dispatch(fetchInitReference())
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
