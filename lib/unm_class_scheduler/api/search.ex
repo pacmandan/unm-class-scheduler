@@ -9,19 +9,19 @@ defmodule UnmClassScheduler.Api.Search do
 
   import Ecto.Query
 
-  @default_opts %{
-    per_page: 10,
-    page: 0,
-  }
+  # @default_opts %{
+  #   per_page: 10,
+  #   page: 0,
+  # }
 
   @spec find_sections(map(), map()) :: list(map())
-  def find_sections(params, opts \\ %{}) do
+  def find_sections(params, _opts \\ %{}) do
     # Params are reduced and pattern matched, adding joins and wheres only as necessary.
-    opts = @default_opts |> Map.merge(opts) |> Map.take([:page, :per_page])
+    # opts = @default_opts |> Map.merge(opts) |> Map.take([:page, :per_page])
     params
     |> Enum.reduce(Section, &find_sections_by/2)
-    |> limit([s], ^opts.per_page)
-    |> offset(^(opts.page * opts.per_page))
+    # |> limit([s], ^opts.per_page)
+    # |> offset(^(opts.page * opts.per_page))
     |> Repo.all()
     |> Repo.preload([
       :part_of_term,
@@ -91,7 +91,7 @@ defmodule UnmClassScheduler.Api.Search do
     else
       q
       |> join(:left, [section], course in assoc(section, :course), as: :course)
-      |> order_by([s, course: course], asc: course.number)
+      |> order_by([s, course: course], asc: course.number, asc: s.number)
     end
   end
 

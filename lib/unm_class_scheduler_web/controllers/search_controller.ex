@@ -17,7 +17,11 @@ defmodule UnmClassSchedulerWeb.SearchController do
     results = validate_params(params)
     |> UnmClassScheduler.Api.Search.find_sections(opts)
 
-    json(conn, results)
+    json(conn, %{
+      results: results,
+      page: opts[:page] + 1,
+      perPage: opts[:per_page]
+    })
   end
 
   @param_keys %{

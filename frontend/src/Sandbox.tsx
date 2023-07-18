@@ -15,7 +15,7 @@ const Sandbox = () => {
   }, [])
   return (<div>
     <h1>Sandbox!</h1><br/>
-    <div className='flex-auto h-auto w-auto'>
+    <div className='h-auto w-auto'>
       <SearchForm />
       <ScheduleSearch />
     </div>

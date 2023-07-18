@@ -6,6 +6,8 @@ const search = (params : any) => {
       semester: params.semester,
       campus: params.campus,
       subject: params.subject,
+      // page: params.page,
+      // perPage: params.perPage,
     }
   })
 }

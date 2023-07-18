@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { Section } from '../catalog'
 import client from "../api/client"
+// import { RootState, AppDispatch } from "../store";
 
 interface SearchParams {
     semester?: string,
@@ -12,7 +13,9 @@ interface SearchParams {
 
 // interface ResultsThunkResponse {
 //     results: Section[],
-//     params: SearchParams
+//     page: number,
+//     perPage: number,
+//     searchParams: SearchParams
 // }
 
 // export const fetchResults = createAsyncThunk<ResultsThunkResponse, SearchParams, {state: RootState, dispatch: AppDispatch}>('search/fetchResults', async (params, thunkApi) => {
@@ -26,12 +29,19 @@ interface SearchParams {
 //     }
 // })
 
-export const fetchResults = createAsyncThunk('search/fetchResults', async (params: any) => {
+export const fetchResults = createAsyncThunk('search/fetchResults', async (params: SearchParams) => {
     // TODO: Handle failure
+    console.log(params)
     const response = await client.search(params)
+    delete params.page;
+    delete params.perPage;
+    console.log(params)
+    console.log(response)
     return {
-        results: response.data,
-        params: params
+        results: response.data.results,
+        page: response.data.page,
+        perPage: response.data.perPage,
+        searchParams: params
     }
 })
 
@@ -79,8 +89,9 @@ export const searchSlice = createSlice({
             // Not really sure how I'm going to do total pages...
             // Might want to put some more thought into pagination.
             state.results = action.payload.results
-            state.lastSearchParams = action.payload.params
-            //state.results = action.payload
+            state.lastSearchParams = action.payload.searchParams
+            state.page = action.payload.page
+            state.perPage = action.payload.perPage
         })
     }
 })
