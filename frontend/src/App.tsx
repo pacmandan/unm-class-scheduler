@@ -1,10 +1,5 @@
-import TestCalendar from "./TestCalendar"
 function App() {
-  return (
-    <>
-      <TestCalendar />
-    </>
-  )
+  return (<></>)
 }
 
 export default App

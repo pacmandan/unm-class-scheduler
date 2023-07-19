@@ -12,6 +12,7 @@ import {
 import './index.css'
 import Sandbox from './Sandbox'
 import { fetchInitReference } from './features/formReference'
+import ScheduleBuilder from './ScheduleBuilder'
 
 const router = createBrowserRouter([
   {
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
   {
     path: '/app',
     element: <App />
+  },
+  {
+    path: '/scheduleBuilder',
+    element: <ScheduleBuilder />
   },
   // TODO: Find a way to ONLY include this in dev environment.
   {
