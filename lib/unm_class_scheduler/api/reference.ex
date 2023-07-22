@@ -35,6 +35,5 @@ defmodule UnmClassScheduler.Api.Reference do
     |> order_by([course], [course.number])
     |> Repo.all()
     |> Enum.map(&Course.serialize/1)
-    |> Enum.map(fn course -> course.number end)
   end
 end
