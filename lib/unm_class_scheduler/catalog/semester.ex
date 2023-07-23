@@ -23,6 +23,11 @@ defmodule UnmClassScheduler.Catalog.Semester do
     updated_at: NaiveDateTime.t(),
   }
 
+  @type serialized_t :: %{
+    code: String.t(),
+    name: String.t(),
+  }
+
   @type valid_params :: %{
     code: String.t(),
     name: String.t(),
@@ -67,7 +72,7 @@ defmodule UnmClassScheduler.Catalog.Semester do
   @impl true
   def conflict_keys(), do: :code
 
-  @spec serialize(__MODULE__.t()) :: map()
+  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
   @impl true
   def serialize(nil), do: nil
   def serialize(data) do

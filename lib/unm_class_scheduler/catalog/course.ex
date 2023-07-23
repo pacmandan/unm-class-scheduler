@@ -29,6 +29,12 @@ defmodule UnmClassScheduler.Catalog.Course do
     updated_at: NaiveDateTime.t(),
   }
 
+  @type serialized_t :: %{
+    number: String.t(),
+    title: String.t(),
+    catalog_description: String.t(),
+  }
+
   @type valid_params :: %{
     code: String.t(),
     name: String.t(),
@@ -115,7 +121,7 @@ defmodule UnmClassScheduler.Catalog.Course do
   #       INNER JOIN colleges ON (departments.college_uuid = colleges.uuid);
   #   """
 
-  @spec serialize(__MODULE__.t()) :: map()
+  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
   @impl true
   def serialize(nil), do: nil
   def serialize(course) do

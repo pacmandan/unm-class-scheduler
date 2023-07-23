@@ -1,25 +1,30 @@
 defmodule UnmClassSchedulerWeb.ReferenceController do
   use UnmClassSchedulerWeb, :controller
 
-  alias UnmClassScheduler.Api.Reference
+  alias UnmClassScheduler.FormReference
 
   def get_semesters(conn, _params) do
-    semesters = Reference.get_semesters()
+    semesters = FormReference.fetch_semesters()
     json(conn, semesters)
   end
 
   def get_campuses(conn, _params) do
-    campuses = Reference.get_campuses()
+    campuses = FormReference.fetch_campuses()
     json(conn, campuses)
   end
 
   def get_subjects(conn, _params) do
-    subjects = Reference.get_subjects()
+    subjects = FormReference.fetch_subjects()
     json(conn, subjects)
   end
 
   def get_courses(conn, %{"subject" => subject_code}) do
-    courses = Reference.get_courses_by_subject(subject_code)
+    # TODO: Validate params using Changeset.
+    # Set up multiple Request.prepare() functions in subcontexts.
+    # (Or in one module, just multiple functions.)
+    # It seems really silly, but it'd give more control over
+    # the error response.
+    courses = FormReference.fetch_courses(subject_code)
     json(conn, courses)
   end
 end
