@@ -10,7 +10,7 @@ defmodule UnmClassScheduler.Catalog.InstructorSection do
   @behaviour UnmClassScheduler.Schema.HasConflicts
   @behaviour UnmClassScheduler.Schema.Serializable
 
-  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Utils.ChangesetUtils
   alias UnmClassScheduler.Catalog.Section
   alias UnmClassScheduler.Catalog.Instructor
 
@@ -57,8 +57,8 @@ defmodule UnmClassScheduler.Catalog.InstructorSection do
       ...> )
       {:ok, %{primary: true, section_uuid: "SEC12345", instructor_uuid: "INS12345"}}
   """
-  @spec validate_data(valid_params(), valid_associations()) :: SchemaUtils.maybe_valid_changes()
   @impl true
+  @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, section: section, instructor: instructor) do
     types = %{
       primary: :boolean,
@@ -68,11 +68,11 @@ defmodule UnmClassScheduler.Catalog.InstructorSection do
 
     {%{}, types}
     |> cast(params, [:primary])
-    |> SchemaUtils.apply_association_uuids(%{
+    |> ChangesetUtils.apply_association_uuids(%{
       section_uuid: section,
       instructor_uuid: instructor,
     })
-    |> SchemaUtils.apply_changeset_if_valid()
+    |> ChangesetUtils.apply_if_valid()
   end
 
   @impl true

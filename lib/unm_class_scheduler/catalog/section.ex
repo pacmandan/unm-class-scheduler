@@ -10,7 +10,8 @@ defmodule UnmClassScheduler.Catalog.Section do
   @behaviour UnmClassScheduler.Schema.HasConflicts
   @behaviour UnmClassScheduler.Schema.Serializable
 
-  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Utils.ChangesetUtils
+  alias UnmClassScheduler.Utils.MapUtils
   alias UnmClassScheduler.Catalog.Semester
   alias UnmClassScheduler.Catalog.Campus
   alias UnmClassScheduler.Catalog.Course
@@ -124,8 +125,8 @@ defmodule UnmClassScheduler.Catalog.Section do
   Validates given data without creating a Schema.
   """
   # TODO: Examples
-  @spec validate_data(valid_params(), valid_associations()) :: SchemaUtils.maybe_valid_changes()
   @impl true
+  @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, associations) do
     types = %{
       crn: :string,
@@ -163,8 +164,8 @@ defmodule UnmClassScheduler.Catalog.Section do
     {%{}, types}
     |> cast(params, Map.keys(types))
     |> validate_required([:crn, :number])
-    |> SchemaUtils.apply_association_uuids(required_associations, optional_associtaions)
-    |> SchemaUtils.apply_changeset_if_valid()
+    |> ChangesetUtils.apply_association_uuids(required_associations, optional_associtaions)
+    |> ChangesetUtils.apply_if_valid()
   end
 
   @impl true
@@ -180,8 +181,8 @@ defmodule UnmClassScheduler.Catalog.Section do
 
   Any part that is not preloaded will be set to nil.
   """
-  @spec serialize(__MODULE__.t()) :: map()
   @impl true
+  @spec serialize(__MODULE__.t()) :: map()
   def serialize(section) do
     %{
       crn: section.crn,
@@ -198,9 +199,9 @@ defmodule UnmClassScheduler.Catalog.Section do
       semester: Semester.serialize(section.semester),
       campus: Campus.serialize(section.campus),
       course: Course.serialize(section.course),
-      subject: Subject.serialize(SchemaUtils.maybe(section, [:course, :subject])),
-      department: Department.serialize(SchemaUtils.maybe(section, [:course, :subject, :department])),
-      college: College.serialize(SchemaUtils.maybe(section, [:course, :subject, :department, :college])),
+      subject: Subject.serialize(MapUtils.maybe(section, [:course, :subject])),
+      department: Department.serialize(MapUtils.maybe(section, [:course, :subject, :department])),
+      college: College.serialize(MapUtils.maybe(section, [:course, :subject, :department, :college])),
       part_of_term: PartOfTerm.serialize(section.part_of_term),
       status: Status.serialize(section.status),
       delivery_type: DeliveryType.serialize(section.delivery_type),
@@ -211,7 +212,7 @@ defmodule UnmClassScheduler.Catalog.Section do
         %{
           crn: s.crn,
           course: Course.serialize(s.course),
-          subject: Subject.serialize(SchemaUtils.maybe(s, [:course, :subject]))
+          subject: Subject.serialize(MapUtils.maybe(s, [:course, :subject]))
         }
       end),
     }

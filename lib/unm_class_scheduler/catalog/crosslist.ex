@@ -13,7 +13,7 @@ defmodule UnmClassScheduler.Catalog.Crosslist do
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
 
-  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Utils.ChangesetUtils
   alias UnmClassScheduler.Catalog.Section
 
   use UnmClassScheduler.Schema
@@ -90,8 +90,8 @@ defmodule UnmClassScheduler.Catalog.Crosslist do
       ...> )
       {:error, [crosslist_uuid: {"can't be blank", [validation: :required]}]}
   """
-  @spec validate_data(valid_params(), valid_associations()) :: SchemaUtils.maybe_valid_changes()
   @impl true
+  @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, section: %Section{} = section, crosslist: crosslist) do
     types = %{
       section_uuid: :string,
@@ -104,7 +104,7 @@ defmodule UnmClassScheduler.Catalog.Crosslist do
     |> cast(section_params, [:section_uuid])
     |> maybe_apply_crosslist(params, crosslist)
     |> validate_required([:section_uuid, :crosslist_uuid])
-    |> SchemaUtils.apply_changeset_if_valid()
+    |> ChangesetUtils.apply_if_valid()
   end
 
   defp maybe_apply_crosslist(changeset, _, nil) do
@@ -129,5 +129,6 @@ defmodule UnmClassScheduler.Catalog.Crosslist do
   end
 
   @impl true
+  @spec conflict_keys :: list(atom())
   def conflict_keys(), do: [:section_uuid, :crosslist_uuid]
 end

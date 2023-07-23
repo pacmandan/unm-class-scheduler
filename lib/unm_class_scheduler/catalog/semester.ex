@@ -13,7 +13,7 @@ defmodule UnmClassScheduler.Catalog.Semester do
 
   import Ecto.Changeset
 
-  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Utils.ChangesetUtils
 
   @type t :: %__MODULE__{
     uuid: String.t(),
@@ -58,22 +58,22 @@ defmodule UnmClassScheduler.Catalog.Semester do
       iex> UnmClassScheduler.Catalog.Semester.validate_data(%{code: "TEST"})
       {:error, [name: {"can't be blank", [{:validation, :required}]}]}
   """
-  @spec validate_data(valid_params(), any()) :: SchemaUtils.maybe_valid_changes()
   @impl true
+  @spec validate_data(valid_params(), any()) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, _associations \\ []) do
     types = %{code: :string, name: :string}
 
     {%{}, types}
     |> cast(params, [:code, :name])
     |> validate_required([:code, :name])
-    |> SchemaUtils.apply_changeset_if_valid()
+    |> ChangesetUtils.apply_if_valid()
   end
 
   @impl true
   def conflict_keys(), do: :code
 
-  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
   @impl true
+  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
   def serialize(nil), do: nil
   def serialize(data) do
     %{
