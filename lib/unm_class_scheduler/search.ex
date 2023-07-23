@@ -1,11 +1,19 @@
 defmodule UnmClassScheduler.Search do
+  @moduledoc """
+  Search Context
+
+  Main context module for performing a section search.
+  """
+
   alias UnmClassScheduler.Search.SectionResult
+  alias UnmClassScheduler.Search.Request
   alias UnmClassScheduler.Search.BuildQuery
   alias UnmClassScheduler.Repo
 
+  @spec find_sections(Request.t()) :: list(SectionResult.t())
   def find_sections(params) do
     params
-    |> BuildQuery.run()
+    |> BuildQuery.build()
     |> Repo.all()
     |> Repo.preload([
       :part_of_term,
