@@ -68,8 +68,8 @@ defmodule UnmClassScheduler.Catalog.Instructor do
       ...> })
       {:error, [email: {"can't be blank", [validation: :required]}]}
   """
-  @spec validate_data(valid_params(), term()) :: ChangesetUtils.maybe_valid_changes()
   @impl true
+  @spec validate_data(valid_params(), term()) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, _associations \\ []) do
     types = %{first: :string, last: :string, middle_initial: :string, email: :string}
     {%{}, types}
@@ -82,8 +82,8 @@ defmodule UnmClassScheduler.Catalog.Instructor do
   @impl true
   def conflict_keys(), do: [:email, :first, :last]
 
-  @spec serialize(__MODULE__.t()) :: map()
   @impl true
+  @spec serialize(__MODULE__.t()) :: map()
   def serialize(instructor) do
     %{
       first: instructor.first,

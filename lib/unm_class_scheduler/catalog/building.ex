@@ -68,8 +68,8 @@ defmodule UnmClassScheduler.Catalog.Building do
       ...> )
       {:error, [campus_uuid: {"can't be blank", [validation: :required]}]}
   """
-  @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
   @impl true
+  @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, campus: campus) do
     types = %{code: :string, name: :string, campus_uuid: :string}
     {%{}, types}
@@ -91,8 +91,8 @@ defmodule UnmClassScheduler.Catalog.Building do
   @impl true
   def conflict_keys(), do: [:code, :campus_uuid]
 
-  @spec serialize(__MODULE__.t()) :: map()
   @impl true
+  @spec serialize(__MODULE__.t()) :: map()
   def serialize(nil), do: nil
   def serialize(building) do
     %{
