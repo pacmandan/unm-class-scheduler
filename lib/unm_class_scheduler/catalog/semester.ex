@@ -28,10 +28,7 @@ defmodule UnmClassScheduler.Catalog.Semester do
     name: String.t(),
   }
 
-  @type valid_params :: %{
-    code: String.t(),
-    name: String.t(),
-  }
+  @type valid_params :: serialized_t()
 
   schema "semesters" do
     field :code, :string

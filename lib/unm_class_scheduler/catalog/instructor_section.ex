@@ -78,8 +78,8 @@ defmodule UnmClassScheduler.Catalog.InstructorSection do
   @impl true
   def conflict_keys(), do: [:section_uuid, :instructor_uuid]
 
-  @spec serialize(__MODULE__.t()) :: map()
   @impl true
+  @spec serialize(__MODULE__.t()) :: map()
   def serialize(instructor_section) do
     %{primary: instructor_section.primary}
     |> Map.merge(Instructor.serialize(instructor_section.instructor))

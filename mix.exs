@@ -50,6 +50,7 @@ defmodule UnmClassScheduler.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:saxy, "~> 1.5"},
+      {:mox, "~> 1.0", only: :test},
     ]
   end
 

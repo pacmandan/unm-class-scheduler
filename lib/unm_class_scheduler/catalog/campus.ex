@@ -32,10 +32,7 @@ defmodule UnmClassScheduler.Catalog.Campus do
     name: String.t(),
   }
 
-  @type valid_params :: %{
-    code: String.t(),
-    name: String.t(),
-  }
+  @type valid_params :: serialized_t()
 
   schema "campuses" do
     field :code, :string
@@ -64,8 +61,8 @@ defmodule UnmClassScheduler.Catalog.Campus do
       iex> UnmClassScheduler.Catalog.Campus.validate_data(%{code: "CAM"})
       {:error, [name: {"can't be blank", [{:validation, :required}]}]}
   """
-  @spec validate_data(valid_params(), any()) :: ChangesetUtils.maybe_valid_changes()
   @impl true
+  @spec validate_data(valid_params(), any()) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, _associations \\ []) do
     types = %{code: :string, name: :string}
 
@@ -78,8 +75,8 @@ defmodule UnmClassScheduler.Catalog.Campus do
   @impl true
   def conflict_keys(), do: :code
 
-  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
   @impl true
+  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
   def serialize(nil), do: nil
   def serialize(data) do
     %{

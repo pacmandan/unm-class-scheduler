@@ -36,10 +36,7 @@ defmodule UnmClassScheduler.Catalog.Subject do
     name: String.t()
   }
 
-  @type valid_params :: %{
-    code: String.t(),
-    name: String.t(),
-  }
+  @type valid_params :: serialized_t()
 
   @type valid_associations :: [
     {:department, Department.t()}
@@ -74,8 +71,8 @@ defmodule UnmClassScheduler.Catalog.Subject do
       ...> )
       {:error, [department_uuid: {"can't be blank", [validation: :required]}]}
   """
-  @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
   @impl true
+  @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, department: department) do
     types = %{code: :string, name: :string, department_uuid: :string}
     {%{}, types}
@@ -97,8 +94,8 @@ defmodule UnmClassScheduler.Catalog.Subject do
   @impl true
   def conflict_keys(), do: :code
 
-  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
   @impl true
+  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
   def serialize(nil), do: nil
   def serialize(subject) do
     %{

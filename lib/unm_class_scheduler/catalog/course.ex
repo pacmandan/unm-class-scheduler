@@ -35,10 +35,7 @@ defmodule UnmClassScheduler.Catalog.Course do
     catalog_description: String.t(),
   }
 
-  @type valid_params :: %{
-    code: String.t(),
-    name: String.t(),
-  }
+  @type valid_params :: serialized_t()
 
   @type valid_associations :: [
     {:subject, Subject.t()}
