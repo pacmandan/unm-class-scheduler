@@ -1,9 +1,18 @@
 defmodule UnmClassScheduler.Search.BuildQuery do
+  @moduledoc """
+  Query builder for performing a section search.
+
+  Dynamically builds up a query based on available parameters.
+  e.g. Only joins tables necessary for the search.
+  """
+
   alias UnmClassScheduler.Catalog.Section
+  alias UnmClassScheduler.Search.Request
 
   import Ecto.Query
 
-  def run(params) do
+  @spec build(Request.t()) :: Ecto.Query.t()
+  def build(params) do
     params
     |> Enum.reduce(Section, &find_sections_by/2)
   end
@@ -37,6 +46,8 @@ defmodule UnmClassScheduler.Search.BuildQuery do
     q
     |> where([section], section.crn == ^crn)
   end
+
+  # TODO: We have a LOT more parameters we can search by.
 
   defp find_sections_by(_unknown_key, q), do: q
 
@@ -76,5 +87,7 @@ defmodule UnmClassScheduler.Search.BuildQuery do
     end
   end
 
+  # Default case commentted out because the linter
+  # says it's unnecessary.
   # defp join_named(q, _unknown_join), do: q
 end

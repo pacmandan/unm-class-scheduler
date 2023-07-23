@@ -3,6 +3,8 @@ defmodule UnmClassScheduler.Schema.Utils do
   Utility module with types and functions used in Catalog Schema files.
   """
 
+  # TODO: Rename to "SchemaUtils" or "ChangesetUtils"
+
   @typedoc """
   Return value for `apply_changeset_if_valid/1` as well as every
   `validate_data/2` function in every schema.
@@ -57,6 +59,7 @@ defmodule UnmClassScheduler.Schema.Utils do
     |> Ecto.Changeset.validate_required(Map.keys(associations))
   end
 
+  # TODO: Move this out of here and into another Utils module.
   @doc """
   Equivalent to .dig() in Ruby.
   """

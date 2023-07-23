@@ -1,4 +1,13 @@
 defmodule UnmClassScheduler.Search.SectionResult do
+  @moduledoc """
+  Result data when performing a search.
+
+  This is essentially a Section, and _all_ associated resources,
+  as deeply nested as we can go without recursion.
+
+  This is the data used to display a sections information on the frontend.
+  """
+
   alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
   alias UnmClassScheduler.Catalog.Semester
   alias UnmClassScheduler.Catalog.Campus
@@ -9,7 +18,6 @@ defmodule UnmClassScheduler.Search.SectionResult do
   alias UnmClassScheduler.Catalog.Instructor
   alias UnmClassScheduler.Catalog.DeliveryType
   alias UnmClassScheduler.Catalog.InstructionalMethod
-
   alias UnmClassScheduler.Catalog.Subject
   alias UnmClassScheduler.Catalog.Department
   alias UnmClassScheduler.Catalog.College
@@ -72,6 +80,12 @@ defmodule UnmClassScheduler.Search.SectionResult do
     })
   }
 
+  @doc """
+  Takes a section and builds out the associated Result.
+
+  If an association is nil, that association will be nil in the result.
+  So PRELOADS MUST HAPPEN BEFORE CALLING THIS if you want associations included.
+  """
   @spec build(Section.t()) :: Result.t()
   def build(section) do
     %{

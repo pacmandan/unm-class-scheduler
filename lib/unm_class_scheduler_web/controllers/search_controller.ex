@@ -1,9 +1,10 @@
 defmodule UnmClassSchedulerWeb.SearchController do
-  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Search.Request
+
   use UnmClassSchedulerWeb, :controller
 
   def get(conn, params) do
-    case prepare(params) do
+    case Request.prepare(params) do
       {:ok, params} ->
         results = UnmClassScheduler.Search.find_sections(params)
         json(conn, %{
@@ -15,25 +16,5 @@ defmodule UnmClassSchedulerWeb.SearchController do
         |> put_status(400)
         |> json(%{error: "There was a problem."})
     end
-  end
-
-  def prepare(params) do
-    changeset(params)
-    |> SchemaUtils.apply_changeset_if_valid()
-  end
-
-  @spec changeset(:invalid | %{optional(:__struct__) => none, optional(atom | binary) => any}) ::
-          Ecto.Changeset.t()
-  def changeset(params) do
-    types = %{
-      semester: :string,
-      campus: :string,
-      subject: :string,
-      course: :string,
-      crn: :string,
-    }
-    {%{}, types}
-    |> Ecto.Changeset.cast(params, Map.keys(types))
-    |> Ecto.Changeset.validate_required([:semester])
   end
 end
