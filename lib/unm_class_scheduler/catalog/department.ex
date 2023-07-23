@@ -16,7 +16,7 @@ defmodule UnmClassScheduler.Catalog.Department do
 
   import Ecto.Changeset
 
-  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Utils.ChangesetUtils
   alias UnmClassScheduler.Catalog.College
   alias UnmClassScheduler.Catalog.Subject
 
@@ -69,31 +69,35 @@ defmodule UnmClassScheduler.Catalog.Department do
       ...> )
       {:error, [college_uuid: {"can't be blank", [validation: :required]}]}
   """
-  @spec validate_data(valid_params(), valid_associations()) :: SchemaUtils.maybe_valid_changes()
   @impl true
+  @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, college: college) do
     types = %{code: :string, name: :string, college_uuid: :string}
     {%{}, types}
     |> cast(params, [:code, :name])
     |> validate_required([:code, :name])
-    |> SchemaUtils.apply_association_uuids(%{college_uuid: college})
-    |> SchemaUtils.apply_changeset_if_valid()
+    |> ChangesetUtils.apply_association_uuids(%{college_uuid: college})
+    |> ChangesetUtils.apply_if_valid()
   end
 
   @impl true
+  @spec parent_module :: module()
   def parent_module(), do: College
 
   @impl true
+  @spec parent_key :: atom()
   def parent_key(), do: :college
 
   @impl true
+  @spec get_parent(__MODULE__.t()) :: College.t()
   def get_parent(department), do: department.college
 
   @impl true
+  @spec conflict_keys :: atom()
   def conflict_keys(), do: :code
 
-  @spec serialize(__MODULE__.t()) :: map()
   @impl true
+  @spec serialize(__MODULE__.t()) :: map()
   def serialize(nil), do: nil
   def serialize(data) do
     %{

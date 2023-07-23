@@ -16,7 +16,7 @@ defmodule UnmClassScheduler.Catalog.Campus do
 
   import Ecto.Changeset
 
-  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Utils.ChangesetUtils
   alias UnmClassScheduler.Catalog.Building
 
   @type t :: %__MODULE__{
@@ -64,7 +64,7 @@ defmodule UnmClassScheduler.Catalog.Campus do
       iex> UnmClassScheduler.Catalog.Campus.validate_data(%{code: "CAM"})
       {:error, [name: {"can't be blank", [{:validation, :required}]}]}
   """
-  @spec validate_data(valid_params(), any()) :: SchemaUtils.maybe_valid_changes()
+  @spec validate_data(valid_params(), any()) :: ChangesetUtils.maybe_valid_changes()
   @impl true
   def validate_data(params, _associations \\ []) do
     types = %{code: :string, name: :string}
@@ -72,7 +72,7 @@ defmodule UnmClassScheduler.Catalog.Campus do
     {%{}, types}
     |> cast(params, [:code, :name])
     |> validate_required([:code, :name])
-    |> SchemaUtils.apply_changeset_if_valid()
+    |> ChangesetUtils.apply_if_valid()
   end
 
   @impl true

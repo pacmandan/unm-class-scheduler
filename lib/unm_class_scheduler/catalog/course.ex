@@ -10,7 +10,7 @@ defmodule UnmClassScheduler.Catalog.Course do
   @behaviour UnmClassScheduler.Schema.HasParent
   @behaviour UnmClassScheduler.Schema.Serializable
 
-  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Utils.ChangesetUtils
   alias UnmClassScheduler.Catalog.Subject
   alias UnmClassScheduler.Catalog.Section
 
@@ -74,8 +74,8 @@ defmodule UnmClassScheduler.Catalog.Course do
       ...> )
       {:error, [subject_uuid: {"can't be blank", [validation: :required]}]}
   """
-  @spec validate_data(valid_params(), valid_associations()) :: SchemaUtils.maybe_valid_changes()
   @impl true
+  @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, subject: subject) do
     types = %{
       number: :string,
@@ -87,11 +87,12 @@ defmodule UnmClassScheduler.Catalog.Course do
     {%{}, types}
     |> cast(params, [:number, :title, :catalog_description])
     |> validate_required([:number, :title])
-    |> SchemaUtils.apply_association_uuids(%{subject_uuid: subject})
-    |> SchemaUtils.apply_changeset_if_valid()
+    |> ChangesetUtils.apply_association_uuids(%{subject_uuid: subject})
+    |> ChangesetUtils.apply_if_valid()
   end
 
   @impl true
+  @spec parent_module :: UnmClassScheduler.Catalog.Subject
   def parent_module(), do: Subject
 
   @impl true
@@ -121,8 +122,8 @@ defmodule UnmClassScheduler.Catalog.Course do
   #       INNER JOIN colleges ON (departments.college_uuid = colleges.uuid);
   #   """
 
-  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
   @impl true
+  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
   def serialize(nil), do: nil
   def serialize(course) do
     %{

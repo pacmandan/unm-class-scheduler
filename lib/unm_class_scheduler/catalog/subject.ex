@@ -12,7 +12,7 @@ defmodule UnmClassScheduler.Catalog.Subject do
   @behaviour UnmClassScheduler.Schema.HasParent
   @behaviour UnmClassScheduler.Schema.Serializable
 
-  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Utils.ChangesetUtils
   alias UnmClassScheduler.Catalog.Department
   alias UnmClassScheduler.Catalog.Course
 
@@ -74,15 +74,15 @@ defmodule UnmClassScheduler.Catalog.Subject do
       ...> )
       {:error, [department_uuid: {"can't be blank", [validation: :required]}]}
   """
-  @spec validate_data(valid_params(), valid_associations()) :: SchemaUtils.maybe_valid_changes()
+  @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
   @impl true
   def validate_data(params, department: department) do
     types = %{code: :string, name: :string, department_uuid: :string}
     {%{}, types}
     |> cast(params, [:code, :name])
     |> validate_required([:code, :name])
-    |> SchemaUtils.apply_association_uuids(%{department_uuid: department})
-    |> SchemaUtils.apply_changeset_if_valid()
+    |> ChangesetUtils.apply_association_uuids(%{department_uuid: department})
+    |> ChangesetUtils.apply_if_valid()
   end
 
   @impl true

@@ -8,7 +8,7 @@ defmodule UnmClassScheduler.Search.SectionResult do
   This is the data used to display a sections information on the frontend.
   """
 
-  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Utils.MapUtils
   alias UnmClassScheduler.Catalog.Semester
   alias UnmClassScheduler.Catalog.Campus
   alias UnmClassScheduler.Catalog.Course
@@ -103,9 +103,9 @@ defmodule UnmClassScheduler.Search.SectionResult do
       semester: Semester.serialize(section.semester),
       campus: Campus.serialize(section.campus),
       course: Course.serialize(section.course),
-      subject: Subject.serialize(SchemaUtils.maybe(section, [:course, :subject])),
-      department: Department.serialize(SchemaUtils.maybe(section, [:course, :subject, :department])),
-      college: College.serialize(SchemaUtils.maybe(section, [:course, :subject, :department, :college])),
+      subject: Subject.serialize(MapUtils.maybe(section, [:course, :subject])),
+      department: Department.serialize(MapUtils.maybe(section, [:course, :subject, :department])),
+      college: College.serialize(MapUtils.maybe(section, [:course, :subject, :department, :college])),
       part_of_term: PartOfTerm.serialize(section.part_of_term),
       status: Status.serialize(section.status),
       delivery_type: DeliveryType.serialize(section.delivery_type),
@@ -119,7 +119,7 @@ defmodule UnmClassScheduler.Search.SectionResult do
         %{
           crn: s.crn,
           course_number: Course.serialize(s.course),
-          subject_code: Subject.serialize(SchemaUtils.maybe(s, [:course, :subject]))
+          subject_code: Subject.serialize(MapUtils.maybe(s, [:course, :subject]))
         }
       end),
     }

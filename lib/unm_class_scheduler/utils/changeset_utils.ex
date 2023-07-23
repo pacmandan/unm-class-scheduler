@@ -8,12 +8,14 @@ defmodule UnmClassScheduler.Utils.ChangesetUtils do
   @type invalid_changes :: {:error, [{atom(), Ecto.Changeset.error()}]}
   @type valid_changes :: {:ok, map() | Ecto.Schema.t()}
   @type valid_changes(success_type) :: {:ok, success_type}
+  @type maybe_valid_changes :: valid_changes() | invalid_changes()
+  @type maybe_valid_changes(success_type) :: valid_changes(success_type) | invalid_changes()
 
   @doc """
   If a changeset is valid, apply the changes and return the map or Schema with the changes applied.
   Otherwise, return the error list from the changeset.
   """
-  @spec apply_if_valid(Ecto.Changeset.t()) :: valid_changes() | invalid_changes()
+  @spec apply_if_valid(Ecto.Changeset.t()) :: maybe_valid_changes()
   def apply_if_valid(changeset) do
     if changeset.valid? do
       {:ok, apply_changes(changeset)}

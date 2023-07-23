@@ -10,7 +10,7 @@ defmodule UnmClassScheduler.Catalog.Instructor do
   @behaviour UnmClassScheduler.Schema.HasConflicts
   @behaviour UnmClassScheduler.Schema.Serializable
 
-  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Utils.ChangesetUtils
   alias UnmClassScheduler.Catalog.InstructorSection
 
   use UnmClassScheduler.Schema
@@ -68,14 +68,14 @@ defmodule UnmClassScheduler.Catalog.Instructor do
       ...> })
       {:error, [email: {"can't be blank", [validation: :required]}]}
   """
-  @spec validate_data(valid_params(), term()) :: SchemaUtils.maybe_valid_changes()
+  @spec validate_data(valid_params(), term()) :: ChangesetUtils.maybe_valid_changes()
   @impl true
   def validate_data(params, _associations \\ []) do
     types = %{first: :string, last: :string, middle_initial: :string, email: :string}
     {%{}, types}
     |> cast(params, Map.keys(types))
     |> validate_required([:first, :last, :email])
-    |> SchemaUtils.apply_changeset_if_valid()
+    |> ChangesetUtils.apply_if_valid()
   end
 
   # Emails are not unique - some instructors are listed as "No UNM email address"

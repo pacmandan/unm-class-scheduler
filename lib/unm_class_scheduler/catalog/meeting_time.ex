@@ -10,7 +10,7 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
   @behaviour UnmClassScheduler.Schema.HasConflicts
   @behaviour UnmClassScheduler.Schema.Serializable
 
-  alias UnmClassScheduler.Schema.Utils, as: SchemaUtils
+  alias UnmClassScheduler.Utils.ChangesetUtils
   alias UnmClassScheduler.Catalog.Section
   alias UnmClassScheduler.Catalog.Building
 
@@ -111,8 +111,8 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
   ## Examples
   """
   # TODO: Examples
-  @spec validate_data(valid_params(), valid_associations()) :: SchemaUtils.maybe_valid_changes()
   @impl true
+  @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, section: section, building: building) do
     types = %{
       start_date: :date,
@@ -146,8 +146,8 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
       :end_date,
       :index,
     ])
-    |> SchemaUtils.apply_association_uuids(%{section_uuid: section}, %{building_uuid: building})
-    |> SchemaUtils.apply_changeset_if_valid()
+    |> ChangesetUtils.apply_association_uuids(%{section_uuid: section}, %{building_uuid: building})
+    |> ChangesetUtils.apply_if_valid()
   end
 
   @impl true
@@ -170,8 +170,8 @@ defmodule UnmClassScheduler.Catalog.MeetingTime do
     end)
   end
 
-  @spec serialize(__MODULE__.t()) :: map()
   @impl true
+  @spec serialize(__MODULE__.t()) :: map()
   def serialize(meeting_time) do
     %{
       start_date: meeting_time.start_date,

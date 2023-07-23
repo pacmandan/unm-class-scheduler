@@ -28,8 +28,8 @@ defmodule UnmClassScheduler.Catalog.DeliveryType do
   @impl true
   def conflict_keys(), do: :code
 
-  @spec serialize(__MODULE__.t()) :: map()
   @impl true
+  @spec serialize(__MODULE__.t()) :: map()
   def serialize(nil), do: nil
   def serialize(data) do
     %{
