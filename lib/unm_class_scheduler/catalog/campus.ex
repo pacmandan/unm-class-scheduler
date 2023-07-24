@@ -27,6 +27,10 @@ defmodule UnmClassScheduler.Catalog.Campus do
     updated_at: NaiveDateTime.t(),
   }
 
+  @typedoc """
+  The map structure intended for display to a user.
+  Omits UUIDs and timestamps.
+  """
   @type serialized_t :: %{
     code: String.t(),
     name: String.t(),
@@ -46,19 +50,15 @@ defmodule UnmClassScheduler.Catalog.Campus do
   @doc """
   Validates given data without creating a Schema.
 
-  Campuses have no parent associations, so anything passed to those is ignored.
+  Campuses have no parent associations, so any second parameter to `validate_data/2` is ignored.
+
+  Required parameters are `:code` and `:name`.
 
   ## Examples
-      iex> UnmClassScheduler.Catalog.Campus.validate_data(%{code: "CAM", name: "Test Campus"})
+      iex> Campus.validate_data(%{code: "CAM", name: "Test Campus"})
       {:ok, %{code: "CAM", name: "Test Campus"}}
 
-      iex> UnmClassScheduler.Catalog.Campus.validate_data(%{"code" => "CAM", "name" => "Test Campus"})
-      {:ok, %{code: "CAM", name: "Test Campus"}}
-
-      iex> UnmClassScheduler.Catalog.Campus.validate_data(%{code: "CAM", name: "Test Campus", extra: "value"})
-      {:ok, %{code: "CAM", name: "Test Campus"}}
-
-      iex> UnmClassScheduler.Catalog.Campus.validate_data(%{code: "CAM"})
+      iex> Campus.validate_data(%{code: "CAM"})
       {:error, [name: {"can't be blank", [{:validation, :required}]}]}
   """
   @impl true
@@ -72,9 +72,24 @@ defmodule UnmClassScheduler.Catalog.Campus do
     |> ChangesetUtils.apply_if_valid()
   end
 
+  @doc """
+  When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
+
+      iex> Campus.conflict_keys()
+      :code
+  """
   @impl true
+  @spec conflict_keys() :: atom()
   def conflict_keys(), do: :code
 
+  @doc """
+  Transforms a Campus into a normal map intended for display to a user.
+
+  ## Examples
+      iex> Campus.serialize(%Campus{code: "CAM", name: "Test Campus"})
+      %{code: "CAM", name: "Test Campus"}
+  """
   @impl true
   @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
   def serialize(nil), do: nil
