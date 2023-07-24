@@ -27,10 +27,16 @@ defmodule UnmClassScheduler.Catalog.College do
     updated_at: NaiveDateTime.t(),
   }
 
-  @type valid_params :: %{
+  @typedoc """
+  The map structure intended for display to a user.
+  Omits UUIDs and timestamps.
+  """
+  @type serialized_t :: %{
     code: String.t(),
     name: String.t(),
   }
+
+  @type valid_params :: serialized_t()
 
   schema "colleges" do
     field :code, :string
@@ -41,24 +47,18 @@ defmodule UnmClassScheduler.Catalog.College do
     timestamps()
   end
 
-  # TODO: Move some of these tests out of doctest and into normal test files.
-  # Anything in doctest should ONLY be relevant for documentation.
-
   @doc """
   Validates given data without creating a Schema.
 
-  Colleges have no parent associations, so naything passed to those is ignored.
+  Colleges have no parent associations, so any second parameter to `validate_data/2` is ignored.
+
+  Required parameters are `:code` and `:name`.
+
   ## Examples
-      iex> UnmClassScheduler.Catalog.College.validate_data(%{code: "COL", name: "Test College"})
+      iex> College.validate_data(%{code: "COL", name: "Test College"})
       {:ok, %{code: "COL", name: "Test College"}}
 
-      iex> UnmClassScheduler.Catalog.College.validate_data(%{"code" => "COL", "name" => "Test College"})
-      {:ok, %{code: "COL", name: "Test College"}}
-
-      iex> UnmClassScheduler.Catalog.College.validate_data(%{code: "COL", name: "Test College", extra: "value"})
-      {:ok, %{code: "COL", name: "Test College"}}
-
-      iex> UnmClassScheduler.Catalog.College.validate_data(%{code: "COL"})
+      iex> College.validate_data(%{code: "COL"})
       {:error, [name: {"can't be blank", [{:validation, :required}]}]}
   """
   @impl true
@@ -72,9 +72,24 @@ defmodule UnmClassScheduler.Catalog.College do
     |> ChangesetUtils.apply_if_valid()
   end
 
+  @doc """
+  When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
+
+      iex> College.conflict_keys()
+      :code
+  """
   @impl true
+  @spec conflict_keys() :: atom()
   def conflict_keys(), do: :code
 
+  @doc """
+  Transforms a College into a normal map intended for display to a user.
+
+  ## Examples
+      iex> College.serialize(%College{code: "COL", name: "Test College"})
+      %{code: "COL", name: "Test College"}
+  """
   @impl true
   @spec serialize(__MODULE__.t()) :: map()
   def serialize(nil), do: nil

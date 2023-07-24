@@ -23,6 +23,10 @@ defmodule UnmClassScheduler.Catalog.Semester do
     updated_at: NaiveDateTime.t(),
   }
 
+  @typedoc """
+  The map structure intended for display to a user.
+  Omits UUIDs and timestamps.
+  """
   @type serialized_t :: %{
     code: String.t(),
     name: String.t(),
@@ -40,19 +44,15 @@ defmodule UnmClassScheduler.Catalog.Semester do
   @doc """
   Validates given data without creating a Schema.
 
-  Semesters have no parent associations, so anything passed to those is ignored.
+  Semesters have no parent associations, so any second parameter to `validate_data/2` is ignored.
+
+  Required parameters are `:code` and `:name`.
 
   ## Examples
-      iex> UnmClassScheduler.Catalog.Semester.validate_data(%{code: "TEST", name: "Test Semester"})
+      iex> Semester.validate_data(%{code: "TEST", name: "Test Semester"})
       {:ok, %{code: "TEST", name: "Test Semester"}}
 
-      iex> UnmClassScheduler.Catalog.Semester.validate_data(%{"code" => "TEST", "name" => "Test Semester"})
-      {:ok, %{code: "TEST", name: "Test Semester"}}
-
-      iex> UnmClassScheduler.Catalog.Semester.validate_data(%{code: "TEST", name: "Test Semester", extra: "value"})
-      {:ok, %{code: "TEST", name: "Test Semester"}}
-
-      iex> UnmClassScheduler.Catalog.Semester.validate_data(%{code: "TEST"})
+      iex> Semester.validate_data(%{code: "TEST"})
       {:error, [name: {"can't be blank", [{:validation, :required}]}]}
   """
   @impl true
@@ -66,9 +66,24 @@ defmodule UnmClassScheduler.Catalog.Semester do
     |> ChangesetUtils.apply_if_valid()
   end
 
+  @doc """
+  When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
+
+      iex> Semester.conflict_keys()
+      :code
+  """
   @impl true
+  @spec conflict_keys() :: atom()
   def conflict_keys(), do: :code
 
+  @doc """
+  Transforms a Semester into a normal map intended for display to a user.
+
+  ## Examples
+      iex> Semester.serialize(%Semester{code: "TEST", name: "Test Semester"})
+      %{code: "TEST", name: "Test Semester"}
+  """
   @impl true
   @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
   def serialize(nil), do: nil

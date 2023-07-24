@@ -51,6 +51,7 @@ defmodule UnmClassScheduler.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:saxy, "~> 1.5"},
       {:mox, "~> 1.0", only: :test},
+      {:ex_doc, "~> 0.21", only: :dev, runtime: false},
     ]
   end
 

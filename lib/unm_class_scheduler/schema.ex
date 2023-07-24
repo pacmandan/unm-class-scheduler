@@ -4,7 +4,7 @@ defmodule UnmClassScheduler.Schema do
       use Ecto.Schema
       @primary_key {:uuid, :binary_id, autogenerate: true}
       @foreign_key_type :binary_id
-      @derive {Phoenix.Param, key: :uuid}
+      # @derive {Phoenix.Param, key: :uuid}
 
       # Implement Access behavior for all Schemas
       # @behaviour Access
