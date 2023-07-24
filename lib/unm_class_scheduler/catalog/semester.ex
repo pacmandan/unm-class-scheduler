@@ -81,11 +81,11 @@ defmodule UnmClassScheduler.Catalog.Semester do
   Transforms a Semester into a normal map intended for display to a user.
 
   ## Examples
-      iex> Semester.serialize(%Semester{code: "TEST", name: "Test Semester"})
+      iex> Semester.serialize(%Semester{uuid: "SEM12345", code: "TEST", name: "Test Semester"})
       %{code: "TEST", name: "Test Semester"}
   """
   @impl true
-  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
+  @spec serialize(t()) :: serialized_t()
   def serialize(nil), do: nil
   def serialize(data) do
     %{

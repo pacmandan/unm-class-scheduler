@@ -87,11 +87,11 @@ defmodule UnmClassScheduler.Catalog.Campus do
   Transforms a Campus into a normal map intended for display to a user.
 
   ## Examples
-      iex> Campus.serialize(%Campus{code: "CAM", name: "Test Campus"})
+      iex> Campus.serialize(%Campus{uuid: "CAM12345", code: "CAM", name: "Test Campus"})
       %{code: "CAM", name: "Test Campus"}
   """
   @impl true
-  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
+  @spec serialize(t()) :: serialized_t()
   def serialize(nil), do: nil
   def serialize(data) do
     %{
