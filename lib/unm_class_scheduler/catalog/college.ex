@@ -87,11 +87,11 @@ defmodule UnmClassScheduler.Catalog.College do
   Transforms a College into a normal map intended for display to a user.
 
   ## Examples
-      iex> College.serialize(%College{code: "COL", name: "Test College"})
+      iex> College.serialize(%College{uuid: "COL12345", code: "COL", name: "Test College"})
       %{code: "COL", name: "Test College"}
   """
   @impl true
-  @spec serialize(__MODULE__.t()) :: map()
+  @spec serialize(__MODULE__.t()) :: serialized_t()
   def serialize(nil), do: nil
   def serialize(data) do
     %{

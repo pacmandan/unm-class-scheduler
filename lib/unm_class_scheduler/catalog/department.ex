@@ -31,10 +31,16 @@ defmodule UnmClassScheduler.Catalog.Department do
     updated_at: NaiveDateTime.t(),
   }
 
-  @type valid_params :: %{
+  @typedoc """
+  The map structure intended for display to a user.
+  Omits UUIDs, timestamps, and associations.
+  """
+  @type serialized_t :: %{
     code: String.t(),
     name: String.t(),
   }
+
+  @type valid_params :: serialized_t()
 
   @type valid_associations :: [
     {:college, College.t()}
@@ -57,15 +63,15 @@ defmodule UnmClassScheduler.Catalog.Department do
   gets applied to the input params as `:college_uuid`.
 
   ## Examples
-      iex> UnmClassScheduler.Catalog.Department.validate_data(
+      iex> Department.validate_data(
       ...>   %{code: "DEP", name: "Test Department"},
-      ...>   college: %UnmClassScheduler.Catalog.College{uuid: "COL12345"}
+      ...>   college: %College{uuid: "COL12345"}
       ...> )
       {:ok, %{code: "DEP", name: "Test Department", college_uuid: "COL12345"}}
 
-      iex> UnmClassScheduler.Catalog.Department.validate_data(
+      iex> Department.validate_data(
       ...>   %{code: "DEP", name: "Test Department"},
-      ...>   college: %UnmClassScheduler.Catalog.College{}
+      ...>   college: %College{}
       ...> )
       {:error, [college_uuid: {"can't be blank", [validation: :required]}]}
   """
@@ -80,24 +86,74 @@ defmodule UnmClassScheduler.Catalog.Department do
     |> ChangesetUtils.apply_if_valid()
   end
 
+  @doc """
+  Gets the parent association module for this record.
+  In this case, `UnmClassScheduler.Catalog.College`.
+  This is used primarily in the updater context.
+
+  Examples:
+      iex> Department.parent_module()
+      UnmClassScheduler.Catalog.College
+  """
   @impl true
   @spec parent_module :: module()
   def parent_module(), do: College
 
+  @doc """
+  Gets the key associated with the parent record in this record.
+  This is used primarily in the updater context.
+
+  Examples:
+      iex> Department.parent_key()
+      :college
+  """
   @impl true
   @spec parent_key :: atom()
   def parent_key(), do: :college
 
+  @doc """
+  Gets the parent association of this record. In this case, the parent College.
+
+  ## Examples
+      iex> c = %College{uuid: "12345"}
+      iex> d = %Department{uuid: "67890", college: c}
+      iex> Department.get_parent(d)
+      %College{uuid: "12345"}
+
+      iex> d = %Department{uuid: "67890"}
+      iex> Department.get_parent(d)
+      nil
+  """
   @impl true
   @spec get_parent(__MODULE__.t()) :: College.t()
-  def get_parent(department), do: department.college
+  def get_parent(department) do
+    if Ecto.assoc_loaded?(department.college) do
+      department.college
+    else
+      nil
+    end
+  end
 
+  @doc """
+    When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
+
+      iex> Department.conflict_keys()
+      :code
+  """
   @impl true
   @spec conflict_keys :: atom()
   def conflict_keys(), do: :code
 
+  @doc """
+  Transforms a Department into a normal map intended for display to a user.
+
+  ## Examples
+      iex> Department.serialize(%Department{uuid: "DEP12345", code: "DEP", name: "Test Department"})
+      %{code: "DEP", name: "Test Department"}
+  """
   @impl true
-  @spec serialize(__MODULE__.t()) :: map()
+  @spec serialize(__MODULE__.t()) :: serialized_t()
   def serialize(nil), do: nil
   def serialize(data) do
     %{

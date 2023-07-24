@@ -13,7 +13,7 @@ defmodule UnmClassScheduler.Catalog.CollegeTest do
     end
 
     test "when an extra parameter is provided" do
-      assert College.validate_data(%{code: "CAM", name: "Test College", extra: "value"}) ==
+      assert College.validate_data(%{code: "COL", name: "Test College", extra: "value"}) ==
         {:ok, %{code: "COL", name: "Test College"}}
     end
 
