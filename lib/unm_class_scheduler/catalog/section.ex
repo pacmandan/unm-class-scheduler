@@ -5,13 +5,14 @@ defmodule UnmClassScheduler.Catalog.Section do
   A Section is an actual "class" that happens. It has a specific time, place,
   and course that it covers, as well as someone who is teaching it.
   When scheduling, these are the main "things" you are choosing from.
+
+  Serialization for Sections has been moved to `UnmClassScheduler.Search.SectionResult`,
+  since it is so large and encompasses things well beyond the scope of just Sections.
   """
   @behaviour UnmClassScheduler.Schema.Validatable
   @behaviour UnmClassScheduler.Schema.HasConflicts
-  @behaviour UnmClassScheduler.Schema.Serializable
 
   alias UnmClassScheduler.Utils.ChangesetUtils
-  alias UnmClassScheduler.Utils.MapUtils
   alias UnmClassScheduler.Catalog.Semester
   alias UnmClassScheduler.Catalog.Campus
   alias UnmClassScheduler.Catalog.Course
@@ -22,10 +23,6 @@ defmodule UnmClassScheduler.Catalog.Section do
   alias UnmClassScheduler.Catalog.InstructorSection
   alias UnmClassScheduler.Catalog.DeliveryType
   alias UnmClassScheduler.Catalog.InstructionalMethod
-
-  alias UnmClassScheduler.Catalog.Subject
-  alias UnmClassScheduler.Catalog.Department
-  alias UnmClassScheduler.Catalog.College
 
   use UnmClassScheduler.Schema
 
@@ -123,8 +120,30 @@ defmodule UnmClassScheduler.Catalog.Section do
 
   @doc """
   Validates given data without creating a Schema.
+
+  ## Examples
+      iex> associations = %{
+      ...>   course: %Course{uuid: "C12345"},
+      ...>   semester: %Semester{uuid: "SEM12345"},
+      ...>   campus: %Campus{uuid: "CAM12345"},
+      ...>   part_of_term: %PartOfTerm{uuid: "PT12345"},
+      ...>   status: %Status{uuid: "ST12345"},
+      ...>   delivery_type: %DeliveryType{uuid: "DT12345"},
+      ...>   instructional_method: %InstructionalMethod{uuid: "IM12345"},
+      ...> }
+      iex> params = %{crn: "58001", number: "0001", title: "Test Section"}
+      iex> Section.validate_data(params, associations)
+      {:ok, %{
+        crn: "58001", number: "0001", title: "Test Section",
+        course_uuid: "C12345",
+        semester_uuid: "SEM12345",
+        campus_uuid: "CAM12345",
+        part_of_term_uuid: "PT12345",
+        status_uuid: "ST12345",
+        delivery_type_uuid: "DT12345",
+        instructional_method_uuid: "IM12345",
+      }}
   """
-  # TODO: Examples
   @impl true
   @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, associations) do
@@ -168,53 +187,14 @@ defmodule UnmClassScheduler.Catalog.Section do
     |> ChangesetUtils.apply_if_valid()
   end
 
-  @impl true
-  def conflict_keys(), do: [:crn, :semester_uuid]
-
   @doc """
-  Takes a fully preloaded section and flattens it into a map, removing all UUIDs.
+  When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
 
-  For example:
-  %{course: %{subject: %{department: %{college: ...}}}}
-  becomes
-  %{course: %{}, subject: %{}, department: %{}, college: %{}}
-
-  Any part that is not preloaded will be set to nil.
+      iex> Section.conflict_keys()
+      [:crn, :semester_uuid]
   """
   @impl true
-  @spec serialize(__MODULE__.t()) :: map()
-  def serialize(section) do
-    %{
-      crn: section.crn,
-      number: section.number,
-      title: section.title,
-      enrollment: section.enrollment,
-      enrollment_max: section.enrollment_max,
-      waitlist: section.waitlist,
-      waitlist_max: section.waitlist_max,
-      credits_min: section.credits_min,
-      credits_max: section.credits_max,
-      fees: section.fees,
-      text: section.text,
-      semester: Semester.serialize(section.semester),
-      campus: Campus.serialize(section.campus),
-      course: Course.serialize(section.course),
-      subject: Subject.serialize(MapUtils.maybe(section, [:course, :subject])),
-      department: Department.serialize(MapUtils.maybe(section, [:course, :subject, :department])),
-      college: College.serialize(MapUtils.maybe(section, [:course, :subject, :department, :college])),
-      part_of_term: PartOfTerm.serialize(section.part_of_term),
-      status: Status.serialize(section.status),
-      delivery_type: DeliveryType.serialize(section.delivery_type),
-      instructional_method: InstructionalMethod.serialize(section.instructional_method),
-      instructors: Enum.map(section.instructors || [], &InstructorSection.serialize/1),
-      meeting_times: Enum.map(section.meeting_times, &MeetingTime.serialize/1),
-      crosslists: Enum.map(section.crosslists || [], fn s ->
-        %{
-          crn: s.crn,
-          course: Course.serialize(s.course),
-          subject: Subject.serialize(MapUtils.maybe(s, [:course, :subject]))
-        }
-      end),
-    }
-  end
+  @spec conflict_keys() :: list(atom())
+  def conflict_keys(), do: [:crn, :semester_uuid]
 end

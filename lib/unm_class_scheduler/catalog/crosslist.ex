@@ -68,14 +68,14 @@ defmodule UnmClassScheduler.Catalog.Crosslist do
   if course number and subject code given in params don't match it.
 
   ## Examples
-      iex> UnmClassScheduler.Catalog.Crosslist.validate_data(
+      iex> Crosslist.validate_data(
       ...>   %{course_number: "123L", subject_code: "SUBJ"},
-      ...>   section: %UnmClassScheduler.Catalog.Section{uuid: "SEC12345"},
-      ...>   crosslist: %UnmClassScheduler.Catalog.Section{
+      ...>   section: %Section{uuid: "SEC12345"},
+      ...>   crosslist: %Section{
       ...>     uuid: "SEC67890",
-      ...>     course: %UnmClassScheduler.Catalog.Course{
+      ...>     course: %Course{
       ...>       number: "123L",
-      ...>       subject: %UnmClassScheduler.Catalog.Subject{
+      ...>       subject: %Subject{
       ...>         code: "SUBJ"
       ...>       }
       ...>     }
@@ -83,27 +83,26 @@ defmodule UnmClassScheduler.Catalog.Crosslist do
       ...> )
       {:ok, %{section_uuid: "SEC12345", crosslist_uuid: "SEC67890"}}
 
-      iex> UnmClassScheduler.Catalog.Crosslist.validate_data(
+      iex> Crosslist.validate_data(
       ...>   %{course_number: "123L", subject_code: "SUBJ"},
-      ...>   section: %UnmClassScheduler.Catalog.Section{uuid: "SEC12345"},
+      ...>   section: %Section{uuid: "SEC12345"},
       ...>   crosslist: nil
       ...> )
       {:error, [crosslist_uuid: {"can't be blank", [validation: :required]}]}
   """
   @impl true
   @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
-  def validate_data(params, section: %Section{} = section, crosslist: crosslist) do
+  def validate_data(params, section: section, crosslist: crosslist) do
     types = %{
       section_uuid: :string,
       crosslist_uuid: :string,
     }
 
-    section_params = %{section_uuid: section.uuid}
-
     {%{}, types}
-    |> cast(section_params, [:section_uuid])
+    |> cast(%{}, [])
+    |> ChangesetUtils.apply_association_uuids(%{section_uuid: section})
     |> maybe_apply_crosslist(params, crosslist)
-    |> validate_required([:section_uuid, :crosslist_uuid])
+    |> validate_required([:crosslist_uuid])
     |> ChangesetUtils.apply_if_valid()
   end
 
@@ -115,19 +114,34 @@ defmodule UnmClassScheduler.Catalog.Crosslist do
   defp maybe_apply_crosslist(changeset, %{course_number: c, subject_code: s}, crosslist) do
     cond do
       !Ecto.assoc_loaded?(crosslist.course) ->
-        # add_error(changeset, :crosslist, "The crosslist Course and Subject must be preloaded.")
-        changeset
+        add_error(changeset, :crosslist, "crosslist Course and Subject must be preloaded")
       !Ecto.assoc_loaded?(crosslist.course.subject) ->
-        # add_error(changeset, :crosslist, "The crosslist Course and Subject must be preloaded.")
-        changeset
-      crosslist.course.number != c or crosslist.course.subject.code != s ->
-        # add_error(changeset, :crosslist, "The given crosslist does not match the given params.")
-        changeset
+        add_error(changeset, :crosslist, "crosslist Course and Subject must be preloaded")
+      crosslist.course.number != c ->
+        add_error(changeset, :course_number, "crosslist course does not match param course")
+      crosslist.course.subject.code != s ->
+        add_error(changeset, :subject_code, "crosslist subject does not match param subject")
       true ->
         cast(changeset, %{crosslist_uuid: crosslist.uuid}, [:crosslist_uuid])
     end
   end
 
+  defp maybe_apply_crosslist(changeset, params, _) when not is_map_key(params, :subject_code) do
+    add_error(changeset, :subject_code, "missing validation param")
+  end
+
+  defp maybe_apply_crosslist(changeset, params, _) when not is_map_key(params, :course_number) do
+    add_error(changeset, :course_number, "missing validation param")
+  end
+
+
+  @doc """
+  When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
+
+      iex> Crosslist.conflict_keys()
+      [:section_uuid, :crosslist_uuid]
+  """
   @impl true
   @spec conflict_keys :: list(atom())
   def conflict_keys(), do: [:section_uuid, :crosslist_uuid]

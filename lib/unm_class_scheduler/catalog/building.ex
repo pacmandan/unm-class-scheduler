@@ -62,15 +62,15 @@ defmodule UnmClassScheduler.Catalog.Building do
   gets applied to the input params as `:campus_uuid`.
 
   ## Examples
-      iex> UnmClassScheduler.Catalog.Building.validate_data(
+      iex> Building.validate_data(
       ...>   %{code: "BLDG", name: "Test Building"},
-      ...>   campus: %UnmClassScheduler.Catalog.Campus{uuid: "CAM12345"}
+      ...>   campus: %Campus{uuid: "CAM12345"}
       ...> )
       {:ok, %{code: "BLDG", name: "Test Building", campus_uuid: "CAM12345"}}
 
-      iex> UnmClassScheduler.Catalog.Building.validate_data(
+      iex> Building.validate_data(
       ...>   %{code: "BLDG", name: "Test Building"},
-      ...>   campus: %UnmClassScheduler.Catalog.Campus{}
+      ...>   campus: %Campus{}
       ...> )
       {:error, [campus_uuid: {"can't be blank", [validation: :required]}]}
   """
