@@ -31,6 +31,10 @@ defmodule UnmClassScheduler.Catalog.Subject do
     updated_at: NaiveDateTime.t(),
   }
 
+  @typedoc """
+  The map structure intended for display to a user.
+  Omits UUIDs, timestamps, and associations.
+  """
   @type serialized_t :: %{
     code: String.t(),
     name: String.t()
@@ -59,15 +63,15 @@ defmodule UnmClassScheduler.Catalog.Subject do
   gets applied to the input params as `:department_uuid`.
 
   ## Examples
-      iex> UnmClassScheduler.Catalog.Subject.validate_data(
+      iex> Subject.validate_data(
       ...>   %{code: "SUB", name: "Test Subject"},
-      ...>   department: %UnmClassScheduler.Catalog.Department{uuid: "DEP12345"}
+      ...>   department: %Department{uuid: "DEP12345"}
       ...> )
       {:ok, %{code: "SUB", name: "Test Subject", department_uuid: "DEP12345"}}
 
-      iex> UnmClassScheduler.Catalog.Subject.validate_data(
+      iex> Subject.validate_data(
       ...>   %{code: "SUB", name: "Test Subject"},
-      ...>   department: %UnmClassScheduler.Catalog.Department{}
+      ...>   department: %Department{}
       ...> )
       {:error, [department_uuid: {"can't be blank", [validation: :required]}]}
   """
@@ -82,20 +86,73 @@ defmodule UnmClassScheduler.Catalog.Subject do
     |> ChangesetUtils.apply_if_valid()
   end
 
+  @doc """
+  Gets the parent association module for this record.
+  In this case, `UnmClassScheduler.Catalog.Department`.
+  This is used primarily in the updater context.
+
+  Examples:
+      iex> Subject.parent_module()
+      UnmClassScheduler.Catalog.Department
+  """
   @impl true
+  @spec parent_module :: module()
   def parent_module(), do: Department
 
+  @doc """
+  Gets the key associated with the parent record in this record.
+  This is used primarily in the updater context.
+
+  Examples:
+      iex> Subject.parent_key()
+      :department
+  """
   @impl true
+  @spec parent_key :: atom()
   def parent_key(), do: :department
 
-  @impl true
-  def get_parent(subject), do: subject.department
+  @doc """
+  Gets the parent association of this record. In this case, the parent Department.
 
+  ## Examples
+      iex> d = %Department{uuid: "12345"}
+      iex> s = %Subject{uuid: "67890", department: d}
+      iex> Subject.get_parent(s)
+      %Department{uuid: "12345"}
+
+      iex> Subject.get_parent(%Subject{uuid: "67890"})
+      nil
+  """
   @impl true
+  @spec get_parent(t()) :: Department.t()
+  def get_parent(subject) do
+    if Ecto.assoc_loaded?(subject.department) do
+      subject.department
+    else
+      nil
+    end
+  end
+
+  @doc """
+  When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
+
+      iex> Subject.conflict_keys()
+      :code
+  """
+  @impl true
+  @spec conflict_keys :: atom()
   def conflict_keys(), do: :code
 
+  @doc """
+  Transforms a Subject into a normal map intended for display to a user.
+
+  ## Examples
+      iex> Subject.serialize(%Subject{uuid: "SUB12345", code: "SUB", name: "Test Subject"})
+      %{code: "SUB", name: "Test Subject"}
+  """
   @impl true
-  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
+  @spec serialize(t()) :: serialized_t()
   def serialize(nil), do: nil
   def serialize(subject) do
     %{

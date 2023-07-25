@@ -18,6 +18,15 @@ defmodule UnmClassScheduler.Catalog.DeliveryType do
     updated_at: NaiveDateTime.t(),
   }
 
+  @typedoc """
+  The map structure intended for display to a user.
+  Omits UUIDs and timestamps.
+  """
+  @type serialized_t :: %{
+    code: String.t(),
+    name: String.t(),
+  }
+
   schema "delivery_types" do
     field :code, :string
     field :name, :string
@@ -25,11 +34,26 @@ defmodule UnmClassScheduler.Catalog.DeliveryType do
     timestamps()
   end
 
+  @doc """
+  When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
+
+      iex> DeliveryType.conflict_keys()
+      :code
+  """
   @impl true
+  @spec conflict_keys() :: atom()
   def conflict_keys(), do: :code
 
+  @doc """
+  Transforms a DeliveryType into a normal map intended for display to a user.
+
+  ## Examples
+      iex> DeliveryType.serialize(%DeliveryType{uuid: "DT12345", code: "DT", name: "Test DT"})
+      %{code: "DT", name: "Test DT"}
+  """
   @impl true
-  @spec serialize(__MODULE__.t()) :: map()
+  @spec serialize(t()) :: serialized_t()
   def serialize(nil), do: nil
   def serialize(data) do
     %{

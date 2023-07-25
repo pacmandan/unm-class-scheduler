@@ -120,12 +120,11 @@ defmodule UnmClassScheduler.Catalog.Department do
       iex> Department.get_parent(d)
       %College{uuid: "12345"}
 
-      iex> d = %Department{uuid: "67890"}
-      iex> Department.get_parent(d)
+      iex> Department.get_parent(%Department{uuid: "67890"})
       nil
   """
   @impl true
-  @spec get_parent(__MODULE__.t()) :: College.t()
+  @spec get_parent(t()) :: College.t()
   def get_parent(department) do
     if Ecto.assoc_loaded?(department.college) do
       department.college
@@ -135,7 +134,7 @@ defmodule UnmClassScheduler.Catalog.Department do
   end
 
   @doc """
-    When inserting records from this Schema, this is the `conflict_target` to
+  When inserting records from this Schema, this is the `conflict_target` to
   use for detecting collisions.
 
       iex> Department.conflict_keys()
@@ -153,7 +152,7 @@ defmodule UnmClassScheduler.Catalog.Department do
       %{code: "DEP", name: "Test Department"}
   """
   @impl true
-  @spec serialize(__MODULE__.t()) :: serialized_t()
+  @spec serialize(t()) :: serialized_t()
   def serialize(nil), do: nil
   def serialize(data) do
     %{

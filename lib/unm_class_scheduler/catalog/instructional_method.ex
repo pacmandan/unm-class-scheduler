@@ -21,6 +21,15 @@ defmodule UnmClassScheduler.Catalog.InstructionalMethod do
     updated_at: NaiveDateTime.t(),
   }
 
+  @typedoc """
+  The map structure intended for display to a user.
+  Omits UUIDs and timestamps.
+  """
+  @type serialized_t :: %{
+    code: String.t(),
+    name: String.t(),
+  }
+
   schema "instructional_methods" do
     field :code, :string
     field :name, :string
@@ -28,11 +37,26 @@ defmodule UnmClassScheduler.Catalog.InstructionalMethod do
     timestamps()
   end
 
+  @doc """
+  When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
+
+      iex> InstructionalMethod.conflict_keys()
+      :code
+  """
   @impl true
+  @spec conflict_keys() :: atom()
   def conflict_keys(), do: :code
 
+  @doc """
+  Transforms a InstructionalMethod into a normal map intended for display to a user.
+
+  ## Examples
+      iex> InstructionalMethod.serialize(%InstructionalMethod{uuid: "IM12345", code: "IM", name: "Test IM"})
+      %{code: "IM", name: "Test IM"}
+  """
   @impl true
-  @spec serialize(__MODULE__.t()) :: map()
+  @spec serialize(t()) :: serialized_t()
   def serialize(nil), do: nil
   def serialize(data) do
     %{
