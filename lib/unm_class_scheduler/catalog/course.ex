@@ -160,6 +160,7 @@ defmodule UnmClassScheduler.Catalog.Course do
   @impl true
   @spec serialize(t()) :: serialized_t()
   def serialize(nil), do: nil
+  def serialize(%Ecto.Association.NotLoaded{}), do: nil
   def serialize(course) do
     %{
       number: course.number,

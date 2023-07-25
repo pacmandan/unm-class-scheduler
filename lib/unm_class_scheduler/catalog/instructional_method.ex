@@ -58,6 +58,7 @@ defmodule UnmClassScheduler.Catalog.InstructionalMethod do
   @impl true
   @spec serialize(t()) :: serialized_t()
   def serialize(nil), do: nil
+  def serialize(%Ecto.Association.NotLoaded{}), do: nil
   def serialize(data) do
     %{
       code: data.code,

@@ -57,5 +57,9 @@ defmodule UnmClassScheduler.Catalog.InstructorTest do
     test "when given nil" do
       assert is_nil(Instructor.serialize(nil))
     end
+
+    test "when given Ecto.Association.NotLoaded" do
+      assert is_nil(Instructor.serialize(%Ecto.Association.NotLoaded{}))
+    end
   end
 end
