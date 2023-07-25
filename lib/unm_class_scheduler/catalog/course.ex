@@ -29,6 +29,10 @@ defmodule UnmClassScheduler.Catalog.Course do
     updated_at: NaiveDateTime.t(),
   }
 
+  @typedoc """
+  The map structure intended for display to a user.
+  Omits UUIDs, timestamps, and associations.
+  """
   @type serialized_t :: %{
     number: String.t(),
     title: String.t(),
@@ -59,15 +63,15 @@ defmodule UnmClassScheduler.Catalog.Course do
   gets applied to the input params as `:subject_uuid`.
 
   ## Examples
-      iex> UnmClassScheduler.Catalog.Course.validate_data(
+      iex> Course.validate_data(
       ...>   %{number: "123L", title: "Test Course", catalog_description: "This is a test course."},
-      ...>   subject: %UnmClassScheduler.Catalog.Subject{uuid: "SUBJ12345"}
+      ...>   subject: %Subject{uuid: "SUBJ12345"}
       ...> )
       {:ok,  %{number: "123L", title: "Test Course", catalog_description: "This is a test course.", subject_uuid: "SUBJ12345"}}
 
-      iex> UnmClassScheduler.Catalog.Course.validate_data(
+      iex> Course.validate_data(
       ...>   %{number: "123L", title: "Test Course"},
-      ...>   subject: %UnmClassScheduler.Catalog.Subject{}
+      ...>   subject: %Subject{}
       ...> )
       {:error, [subject_uuid: {"can't be blank", [validation: :required]}]}
   """
@@ -88,18 +92,81 @@ defmodule UnmClassScheduler.Catalog.Course do
     |> ChangesetUtils.apply_if_valid()
   end
 
+  @doc """
+  Gets the parent association module for this record.
+  In this case, `UnmClassScheduler.Catalog.Subject`.
+  This is used primarily in the updater context.
+
+  Examples:
+      iex> Course.parent_module()
+      UnmClassScheduler.Catalog.Subject
+  """
   @impl true
-  @spec parent_module :: UnmClassScheduler.Catalog.Subject
+  @spec parent_module :: module()
   def parent_module(), do: Subject
 
+  @doc """
+  Gets the key associated with the parent record in this record.
+  This is used primarily in the updater context.
+
+  Examples:
+      iex> Course.parent_key()
+      :subject
+  """
   @impl true
+  @spec parent_key :: atom()
   def parent_key(), do: :subject
 
-  @impl true
-  def get_parent(course), do: course.subject
+  @doc """
+  Gets the parent association of this record. In this case, the parent Subject.
 
+  ## Examples
+      iex> s = %Subject{uuid: "12345"}
+      iex> c = %Course{uuid: "67890", subject: s}
+      iex> Course.get_parent(c)
+      %Subject{uuid: "12345"}
+
+      iex> Course.get_parent(%Course{uuid: "67890"})
+      nil
+  """
   @impl true
+  @spec get_parent(t()) :: Subject.t()
+  def get_parent(course) do
+    if Ecto.assoc_loaded?(course.subject) do
+      course.subject
+    else
+      nil
+    end
+  end
+
+  @doc """
+  When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
+
+      iex> Course.conflict_keys()
+      [:number, :subject_uuid]
+  """
+  @impl true
+  @spec conflict_keys :: list(atom())
   def conflict_keys(), do: [:number, :subject_uuid]
+
+  @doc """
+  Transforms a Course into a normal map intended for display to a user.
+
+  ## Examples
+      iex> Course.serialize(%Course{uuid: "123456", number: "123L", title: "Test Course", catalog_description: "This is a test course."})
+      %{number: "123L", title: "Test Course", catalog_description: "This is a test course."}
+  """
+  @impl true
+  @spec serialize(t()) :: serialized_t()
+  def serialize(nil), do: nil
+  def serialize(course) do
+    %{
+      number: course.number,
+      title: course.title,
+      catalog_description: course.catalog_description,
+    }
+  end
 
   # Proposed view for finding courses by number and subject.
   # I'll wait to implement this until we start getting into the search API.
@@ -118,15 +185,4 @@ defmodule UnmClassScheduler.Catalog.Course do
   #       INNER JOIN departments ON (subjects.department_uuid = departments.uuid)
   #       INNER JOIN colleges ON (departments.college_uuid = colleges.uuid);
   #   """
-
-  @impl true
-  @spec serialize(__MODULE__.t()) :: __MODULE__.serialized_t()
-  def serialize(nil), do: nil
-  def serialize(course) do
-    %{
-      number: course.number,
-      title: course.title,
-      catalog_description: course.catalog_description,
-    }
-  end
 end

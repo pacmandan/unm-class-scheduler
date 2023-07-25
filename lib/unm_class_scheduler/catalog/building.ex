@@ -31,10 +31,16 @@ defmodule UnmClassScheduler.Catalog.Building do
     updated_at: NaiveDateTime.t(),
   }
 
-  @type valid_params :: %{
+  @typedoc """
+  The map structure intended for display to a user.
+  Omits UUIDs, timestamps, and associations.
+  """
+  @type serialized_t :: %{
     code: String.t(),
     name: String.t(),
   }
+
+  @type valid_params :: serialized_t()
 
   @type valid_associations :: [
     {:campus, Campus.t()}
@@ -79,20 +85,73 @@ defmodule UnmClassScheduler.Catalog.Building do
     |> ChangesetUtils.apply_if_valid()
   end
 
+  @doc """
+  Gets the parent association module for this record.
+  In this case, `UnmClassScheduler.Catalog.Campus`.
+  This is used primarily in the updater context.
+
+  Examples:
+      iex> Building.parent_module()
+      UnmClassScheduler.Catalog.Campus
+  """
   @impl true
+  @spec parent_module :: module()
   def parent_module(), do: Campus
 
+  @doc """
+  Gets the key associated with the parent record in this record.
+  This is used primarily in the updater context.
+
+  Examples:
+      iex> Building.parent_key()
+      :campus
+  """
   @impl true
+  @spec parent_key :: atom()
   def parent_key(), do: :campus
 
-  @impl true
-  def get_parent(building), do: building.campus
+  @doc """
+  Gets the parent association of this record. In this case, the parent College.
 
+  ## Examples
+      iex> c = %Campus{uuid: "12345"}
+      iex> b = %Building{uuid: "67890", campus: c}
+      iex> Building.get_parent(b)
+      %Campus{uuid: "12345"}
+
+      iex> Building.get_parent(%Building{uuid: "67890"})
+      nil
+  """
   @impl true
+  @spec get_parent(t()) :: Campus.t()
+  def get_parent(building) do
+    if Ecto.assoc_loaded?(building.campus) do
+      building.campus
+    else
+      nil
+    end
+  end
+
+  @doc """
+  When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
+
+      iex> Building.conflict_keys()
+      [:code, :campus_uuid]
+  """
+  @impl true
+  @spec conflict_keys :: list(atom())
   def conflict_keys(), do: [:code, :campus_uuid]
 
+  @doc """
+  Transforms a Building into a normal map intended for display to a user.
+
+  ## Examples
+      iex> Building.serialize(%Building{uuid: "BLDG12345", code: "BLDG", name: "Test Building"})
+      %{code: "BLDG", name: "Test Building"}
+  """
   @impl true
-  @spec serialize(__MODULE__.t()) :: map()
+  @spec serialize(t()) :: serialized_t()
   def serialize(nil), do: nil
   def serialize(building) do
     %{
