@@ -29,6 +29,14 @@ defmodule UnmClassScheduler.Catalog.InstructorSection do
     updated_at: NaiveDateTime.t(),
   }
 
+  @type serialized_t :: %{
+    primary: boolean(),
+    first: String.t(),
+    middle_initial: String.t(),
+    last: String.t(),
+    email: String.t(),
+  }
+
   @type valid_params :: %{
     primary: boolean()
   }
@@ -50,16 +58,18 @@ defmodule UnmClassScheduler.Catalog.InstructorSection do
   Validates given data without creating a Schema.
 
   ## Examples
-      iex> UnmClassScheduler.Catalog.Instructor.validate_data(
+      iex> InstructorSection.validate_data(
       ...>   %{primary: true},
-      ...>   section: %UnmClassScheduler.Catalog.Section{uuid: "SEC12345"},
-      ...>   instructor: %UnmClassScheduler.Catalog.Instructor{uuid: "INS12345"}
+      ...>   section: %Section{uuid: "SEC12345"},
+      ...>   instructor: %Instructor{uuid: "INS12345"}
       ...> )
       {:ok, %{primary: true, section_uuid: "SEC12345", instructor_uuid: "INS12345"}}
   """
   @impl true
   @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
-  def validate_data(params, section: section, instructor: instructor) do
+  def validate_data(params, associations) do
+    %{section: section, instructor: instructor} = Map.new(associations)
+
     types = %{
       primary: :boolean,
       section_uuid: :string,
@@ -68,6 +78,7 @@ defmodule UnmClassScheduler.Catalog.InstructorSection do
 
     {%{}, types}
     |> cast(params, [:primary])
+    |> validate_required([:primary])
     |> ChangesetUtils.apply_association_uuids(%{
       section_uuid: section,
       instructor_uuid: instructor,
@@ -75,11 +86,42 @@ defmodule UnmClassScheduler.Catalog.InstructorSection do
     |> ChangesetUtils.apply_if_valid()
   end
 
+  @doc """
+  When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
+
+  In this case, emails alone are not actually unique.
+  Some instructors are listed as "No UNM email address"
+
+      iex> InstructorSection.conflict_keys()
+      [:section_uuid, :instructor_uuid]
+  """
   @impl true
+  @spec conflict_keys() :: list(atom())
   def conflict_keys(), do: [:section_uuid, :instructor_uuid]
 
+  @doc """
+  Transforms an InstructorSection into a normal map intended for display to a user.
+
+  This has the effect of flattening the associated Instructor and discarding the Section.
+
+  ## Examples
+      iex> instructor = %Instructor{
+      ...>   uuid: "IN12345",
+      ...>   first: "Testy", middle_initial: "M", last: "McTesterson",
+      ...>   email: "test@testmail.com",
+      ...> }
+      iex> InstructorSection.serialize(%InstructorSection{
+      ...>   uuid: "INS12345",
+      ...>   primary: false,
+      ...>   instructor: instructor,
+      ...>   section: %Section{uuid: "SEC12345", crn: "CRN50001"},
+      ...> })
+      %{primary: false, first: "Testy", middle_initial: "M", last: "McTesterson", email: "test@testmail.com"}
+  """
   @impl true
-  @spec serialize(__MODULE__.t()) :: map()
+  @spec serialize(t()) :: serialized_t()
+  def serialize(nil), do: nil
   def serialize(instructor_section) do
     %{primary: instructor_section.primary}
     |> Map.merge(Instructor.serialize(instructor_section.instructor))

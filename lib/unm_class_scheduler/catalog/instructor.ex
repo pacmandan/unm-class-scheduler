@@ -28,12 +28,18 @@ defmodule UnmClassScheduler.Catalog.Instructor do
     updated_at: NaiveDateTime.t(),
   }
 
-  @type valid_params :: %{
+  @typedoc """
+  The map structure intended for display to a user.
+  Omits UUIDs, timestamps, and associations.
+  """
+  @type serialized_t :: %{
     first: String.t(),
     middle_initial: String.t(),
     last: String.t(),
     email: String.t(),
   }
+
+  @type valid_params :: serialized_t()
 
   schema "instructors" do
     field :first, :string
@@ -57,13 +63,13 @@ defmodule UnmClassScheduler.Catalog.Instructor do
   `first`, `last`, and `email` are all required.
 
   ## Examples
-      iex> UnmClassScheduler.Catalog.Instructor.validate_data(%{
+      iex> Instructor.validate_data(%{
       ...>   first: "Testy", middle_initial: "M", last: "McTesterson",
       ...>   email: "test@testmail.com",
       ...> })
       {:ok, %{first: "Testy", middle_initial: "M", last: "McTesterson", email: "test@testmail.com"}}
 
-      iex> UnmClassScheduler.Catalog.Instructor.validate_data(%{
+      iex> Instructor.validate_data(%{
       ...>   first: "Testy", middle_initial: "M", last: "McTesterson"
       ...> })
       {:error, [email: {"can't be blank", [validation: :required]}]}
@@ -78,12 +84,34 @@ defmodule UnmClassScheduler.Catalog.Instructor do
     |> ChangesetUtils.apply_if_valid()
   end
 
-  # Emails are not unique - some instructors are listed as "No UNM email address"
+  @doc """
+  When inserting records from this Schema, this is the `conflict_target` to
+  use for detecting collisions.
+
+  In this case, emails alone are not actually unique.
+  Some instructors are listed as "No UNM email address"
+
+      iex> Instructor.conflict_keys()
+      [:email, :first, :last]
+  """
   @impl true
+  @spec conflict_keys() :: list(atom())
   def conflict_keys(), do: [:email, :first, :last]
 
+  @doc """
+  Transforms an Instructor into a normal map intended for display to a user.
+
+  ## Examples
+      iex> Instructor.serialize(%Instructor{
+      ...>   uuid: "IN12345",
+      ...>   first: "Testy", middle_initial: "M", last: "McTesterson",
+      ...>   email: "test@testmail.com",
+      ...> })
+      %{first: "Testy", middle_initial: "M", last: "McTesterson", email: "test@testmail.com"}
+  """
   @impl true
-  @spec serialize(__MODULE__.t()) :: map()
+  @spec serialize(t()) :: serialized_t()
+  def serialize(nil), do: nil
   def serialize(instructor) do
     %{
       first: instructor.first,
