@@ -91,8 +91,9 @@ defmodule UnmClassScheduler.Catalog.College do
       %{code: "COL", name: "Test College"}
   """
   @impl true
-  @spec serialize(__MODULE__.t()) :: serialized_t()
+  @spec serialize(t()) :: serialized_t()
   def serialize(nil), do: nil
+  def serialize(%Ecto.Association.NotLoaded{}), do: nil
   def serialize(data) do
     %{
       code: data.code,

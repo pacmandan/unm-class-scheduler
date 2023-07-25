@@ -230,5 +230,9 @@ defmodule UnmClassScheduler.Catalog.MeetingTimeTest do
     test "when given nil" do
       assert is_nil(MeetingTime.serialize(nil))
     end
+
+    test "when given Ecto.Association.NotLoaded" do
+      assert is_nil(MeetingTime.serialize(%Ecto.Association.NotLoaded{}))
+    end
   end
 end

@@ -110,12 +110,12 @@ defmodule UnmClassScheduler.Search.SectionResult do
       status: Status.serialize(section.status),
       delivery_type: DeliveryType.serialize(section.delivery_type),
       instructional_method: InstructionalMethod.serialize(section.instructional_method),
-      instructors: Enum.map(section.instructors || [], fn instructor_section ->
+      instructors: Enum.map(empty_array_if_not_loaded(section.instructors), fn instructor_section ->
         %{primary: instructor_section.primary}
         |> Map.merge(Instructor.serialize(instructor_section.instructor))
       end),
-      meeting_times: Enum.map(section.meeting_times, &MeetingTime.serialize/1),
-      crosslists: Enum.map(section.crosslists || [], fn s ->
+      meeting_times: Enum.map(empty_array_if_not_loaded(section.meeting_times), &MeetingTime.serialize/1),
+      crosslists: Enum.map(empty_array_if_not_loaded(section.crosslists), fn s ->
         %{
           crn: s.crn,
           course_number: Course.serialize(s.course),
@@ -124,4 +124,7 @@ defmodule UnmClassScheduler.Search.SectionResult do
       end),
     }
   end
+
+  defp empty_array_if_not_loaded(%Ecto.Association.NotLoaded{}), do: []
+  defp empty_array_if_not_loaded(data) when is_list(data), do: data
 end

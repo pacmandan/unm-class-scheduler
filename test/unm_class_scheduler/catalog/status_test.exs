@@ -10,5 +10,9 @@ defmodule UnmClassScheduler.Catalog.StatusTest do
     test "when given nil" do
       assert is_nil(Status.serialize(nil))
     end
+
+    test "when given Ecto.Association.NotLoaded" do
+      assert is_nil(Status.serialize(%Ecto.Association.NotLoaded{}))
+    end
   end
 end
