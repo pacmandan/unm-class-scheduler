@@ -11,6 +11,9 @@ defmodule UnmClassScheduler.Search.BuildQuery do
 
   import Ecto.Query
 
+  @doc """
+  Takes a list of parameters, and builds out a query based on them.
+  """
   @spec build(Request.t()) :: Ecto.Query.t()
   def build(params) do
     params
@@ -51,6 +54,7 @@ defmodule UnmClassScheduler.Search.BuildQuery do
 
   defp find_sections_by(_unknown_key, q), do: q
 
+  @spec join_named(Ecto.Query.t(), atom()) :: Ecto.Query.t()
   defp join_named(q, :semester) do
     if has_named_binding?(q, :semester) do
       q
