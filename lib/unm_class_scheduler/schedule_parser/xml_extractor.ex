@@ -1,24 +1,26 @@
 defmodule UnmClassScheduler.ScheduleParser.XMLExtractor do
+  @moduledoc """
+  Saxy Parser event handler for parsing schedule XML files.
+  """
+
   @behaviour Saxy.Handler
 
-  alias UnmClassScheduler.Catalog.{
-    Semester,
-    Campus,
-    Building,
-    College,
-    Department,
-    Subject,
-    Course,
-    Section,
-    MeetingTime,
-    Crosslist,
-    Instructor,
-    InstructorSection,
-    PartOfTerm,
-    Status,
-    InstructionalMethod,
-    DeliveryType,
-  }
+  alias UnmClassScheduler.Catalog.Semester
+  alias UnmClassScheduler.Catalog.Campus
+  alias UnmClassScheduler.Catalog.Building
+  alias UnmClassScheduler.Catalog.College
+  alias UnmClassScheduler.Catalog.Department
+  alias UnmClassScheduler.Catalog.Subject
+  alias UnmClassScheduler.Catalog.Course
+  alias UnmClassScheduler.Catalog.Section
+  alias UnmClassScheduler.Catalog.MeetingTime
+  alias UnmClassScheduler.Catalog.Crosslist
+  alias UnmClassScheduler.Catalog.Instructor
+  alias UnmClassScheduler.Catalog.InstructorSection
+  alias UnmClassScheduler.Catalog.PartOfTerm
+  alias UnmClassScheduler.Catalog.Status
+  alias UnmClassScheduler.Catalog.InstructionalMethod
+  alias UnmClassScheduler.Catalog.DeliveryType
   alias UnmClassScheduler.ScheduleParser.ExtractedItem
 
   @type current_state_t :: %{atom() => (ExtractedItem.t() | boolean())}
@@ -110,6 +112,9 @@ defmodule UnmClassScheduler.ScheduleParser.XMLExtractor do
   }
   @accepted_types Map.keys(@attribute_maps)
 
+  @doc """
+  Extracts, verifies, and dedups records from the list of files given.
+  """
   @spec extract_from(list(String.t())) :: completed_state_t()
   def extract_from(filenames) do
     filenames

@@ -17,6 +17,9 @@ defmodule UnmClassScheduler.FormReference do
 
   import Ecto.Query
 
+  @doc """
+  Fetches the full list of available semesters.
+  """
   @spec fetch_semesters() :: list(Semester.serialized_t())
   def fetch_semesters() do
     Semester
@@ -25,6 +28,9 @@ defmodule UnmClassScheduler.FormReference do
     |> Enum.map(&Semester.serialize/1)
   end
 
+  @doc """
+  Fetches the full list of available campuses.
+  """
   @spec fetch_campuses() :: list(Campus.serialized_t())
   def fetch_campuses() do
     Campus
@@ -33,6 +39,9 @@ defmodule UnmClassScheduler.FormReference do
     |> Enum.map(&Campus.serialize/1)
   end
 
+  @doc """
+  Fetches the full list of available subjects.
+  """
   @spec fetch_subjects() :: list(Subject.serialized_t())
   def fetch_subjects() do
     Subject

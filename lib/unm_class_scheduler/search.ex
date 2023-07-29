@@ -10,6 +10,10 @@ defmodule UnmClassScheduler.Search do
   alias UnmClassScheduler.Search.BuildQuery
   alias UnmClassScheduler.Repo
 
+  @doc """
+  Performs a search request, preloads all connected records, and formats
+  the Sections as fully populated SectionResults.
+  """
   @spec find_sections(Request.t()) :: list(SectionResult.t())
   def find_sections(params) do
     params

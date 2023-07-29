@@ -39,7 +39,7 @@ semesters = [
 ] |> Fixtures.build()
 
 campuses = [
-  %Campus{code: "ABQ", name: "Albuqueque/Main"},
+  %Campus{code: "ABQ", name: "Albuquerque/Main"},
   %Campus{code: "GA", name: "Gallup"},
   %Campus{code: "LA", name: "Los Alamos"},
 ] |> Fixtures.build()
@@ -106,7 +106,6 @@ instructors = [
   %Instructor{first: "Fake", middle_initial: "S", last: "Person", email: "fperson@unm.edu"},
 ] |> Fixtures.build(fn instructor -> instructor.email end)
 
-# TODO: Finish filling out sections - params, times
 sections = [
   %Section{
     crn: "50000",
