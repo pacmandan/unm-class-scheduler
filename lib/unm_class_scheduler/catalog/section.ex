@@ -76,15 +76,13 @@ defmodule UnmClassScheduler.Catalog.Section do
     text: String.t(),
   }
 
-  @type valid_associations :: [
-    course: Course.t(),
-    semester: Semester.t(),
-    part_of_term: PartOfTerm.t(),
-    status: Status.t(),
-    delivery_type: DeliveryType.t(),
-    instructional_method: InstructionalMethod.t(),
-    campus: Campus.t()
-  ]
+  @type valid_associations :: {:course, Course.t()}
+    | {:semester, Semester.t()}
+    | {:part_of_term, PartOfTerm.t()}
+    | {:status, Status.t()}
+    | {:delivery_type, DeliveryType.t()}
+    | {:instructional_method, InstructionalMethod.t()}
+    | {:campus, Campus.t()}
 
   schema "sections" do
     field :crn, :string
@@ -145,7 +143,7 @@ defmodule UnmClassScheduler.Catalog.Section do
       }}
   """
   @impl true
-  @spec validate_data(valid_params(), valid_associations()) :: ChangesetUtils.maybe_valid_changes()
+  @spec validate_data(valid_params(), [valid_associations()]) :: ChangesetUtils.maybe_valid_changes()
   def validate_data(params, associations) do
     types = %{
       crn: :string,

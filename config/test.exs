@@ -23,6 +23,9 @@ config :unm_class_scheduler, UnmClassSchedulerWeb.Endpoint,
 # In test we don't send emails.
 config :unm_class_scheduler, UnmClassScheduler.Mailer, adapter: Swoosh.Adapters.Test
 
+# Don't download for real in tests.
+config :unm_class_scheduler, file_downloader: UnmClassScheduler.ScheduleParser.FileDownloaderMock
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 

@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<unmschedule version="1.0.4" pubdate="2023-05-31-14:00:04" source="UNM">
+<usage><guideline url="http://xmlschedule.unm.edu/docs/xml-schedule-usage-guideline.html" /></usage>
+<lookups>
+<parts-of-term>
+  <part-of-term code="1">Full Term</part-of-term>
+  <part-of-term code="1H">First Half Term</part-of-term>
+  <part-of-term code="2H">Second Half Term</part-of-term>
+  <part-of-term code="3Q">Three-Quarter Term</part-of-term>
+  <part-of-term code="C">Combined Sessions</part-of-term>
+  <part-of-term code="INT">Late Starting Courses</part-of-term>
+  <part-of-term code="LAW">Law Term</part-of-term>
+  <part-of-term code="M01">MD Program - Block 1</part-of-term>
+  <part-of-term code="M02">MD Program - Block 2</part-of-term>
+  <part-of-term code="M03">MD Program - Block 3</part-of-term>
+  <part-of-term code="M04">MD Program - Block 4</part-of-term>
+  <part-of-term code="M05">MD Program - Block 5</part-of-term>
+  <part-of-term code="M06">MD Program - Block 6</part-of-term>
+  <part-of-term code="M07">MD Program - Block 7</part-of-term>
+  <part-of-term code="M08">MD Program - Block 8</part-of-term>
+  <part-of-term code="M09">MD Program - Block 9</part-of-term>
+  <part-of-term code="M10">MD Program - Block 10</part-of-term>
+  <part-of-term code="M11">MD Program - Block 11</part-of-term>
+  <part-of-term code="M12">MD Program - Block 12</part-of-term>
+  <part-of-term code="M13">MD Program - Block 13</part-of-term>
+  <part-of-term code="M14">MD Program - Block 14</part-of-term>
+  <part-of-term code="N1H">Nursing First Half Term</part-of-term>
+  <part-of-term code="N2H">Nursing Second Half Term</part-of-term>
+  <part-of-term code="NF">Nursing Full Term</part-of-term>
+  <part-of-term code="OL">Open Learning</part-of-term>
+  <part-of-term code="PBM">MS-BIOM-CR Program</part-of-term>
+  <part-of-term code="REM">Remedial Courses</part-of-term>
+  <part-of-term code="SSP">Special Student Programs</part-of-term>
+</parts-of-term>
+<statuses>
+  <status code="A">Active</status>
+  <status code="C">Cancelled</status>
+  <status code="I">Inactive</status>
+  <status code="M">Cancelled w/Message</status>
+  <status code="R">Reserved</status>
+  <status code="S">Cancelled/Rescheduled</status>
+  <status code="T">Cancelled/Reschedule w/Message</status>
+</statuses>
+</lookups>
+<semester code="2023XX" name="Test 2023" index="1">
+<campus code="ABQ" name="Albuquerque/Main">
+  <college code="COL1" name="College 1">
+    <department code="DEP1" name="Department 1">
+      <subject code="SUBJ1" name="Subject 1">
+        <course number="111" title="Course 1.1">
+          <catalog-description>SUBJ1 111 description</catalog-description>
+          <section crn="50000" number="001" part-of-term="1" status="A">
+            <section-title>Section 50000 title</section-title>
+            <text>This is the section 50000 text</text>
+            <instructional-method code="ENH">Web Enhanced</instructional-method>
+            <delivery-type code="LC">Lecture</delivery-type>
+            <enrollment max="10">3</enrollment>
+            <waitlist max="30">15</waitlist>
+            <credits>3</credits>
+            <fees>50.23</fees>
+            <instructors>
+              <instructor primary="y">
+                <first>John</first>
+                <last>Smith</last>
+                <middleInitial></middleInitial>
+                <email>jsmith@unm.edu</email>
+              </instructor>
+            </instructors>
+            <meeting-times>
+              <meeting-time>
+                <start-date>2023-01-16</start-date>
+                <end-date>2023-05-13</end-date>
+                <days>
+                <day>M</day>
+                <day>W</day>
+                <day>F</day>
+                </days>
+                <start-time>1000</start-time>
+                <end-time>1050</end-time>
+                <bldg code="BLDG1">Building 1</bldg>
+                <room>100</room>
+              </meeting-time>
+            </meeting-times>
+            <crosslists>
+            </crosslists>
+          </section>
+        </course>
+        <course number="112" title="Course 1.1">
+          <catalog-description>SUBJ1 112 description</catalog-description>
+          <section crn="50001" number="001" part-of-term="1" status="A">
+            <section-title></section-title>
+            <text></text>
+            <instructional-method code="ENH">Web Enhanced</instructional-method>
+            <delivery-type code="LC">Lecture</delivery-type>
+            <enrollment max="0">0</enrollment>
+            <waitlist max="0">0</waitlist>
+            <credits>3</credits>
+            <fees>0</fees>
+            <instructors>
+              <instructor primary="y">
+                <first>Testy</first>
+                <last>McTesterson</last>
+                <middleInitial>J</middleInitial>
+                <email>tmctesterson@unm.edu</email>
+              </instructor>
+            </instructors>
+            <meeting-times>
+              <meeting-time>
+                <start-date>2023-01-16</start-date>
+                <end-date>2023-05-13</end-date>
+                <days>
+                <day>M</day>
+                <day>W</day>
+                <day>F</day>
+                </days>
+                <start-time>0900</start-time>
+                <end-time>0950</end-time>
+                <bldg code="BLDG2">Building 2</bldg>
+                <room>100</room>
+              </meeting-time>
+            </meeting-times>
+            <crosslists>
+            </crosslists>
+          </section>
+        </course>
+      </subject>
+    </department>
+  </college>
+  <college code="COL2" name="College 2">
+    <department code="DEP2" name="Department 2">
+      <subject code="SUBJ2" name="Subject 2">
+        <course number="211" title="Course 2.1">
+          <catalog-description>SUBJ1 211 description</catalog-description>
+          <section crn="50002" number="001" part-of-term="1" status="A">
+            <section-title></section-title>
+            <text></text>
+            <instructional-method code="ENH">Web Enhanced</instructional-method>
+            <delivery-type code="LC">Lecture</delivery-type>
+            <enrollment max="0">0</enrollment>
+            <waitlist max="0">0</waitlist>
+            <credits>3</credits>
+            <fees>0</fees>
+            <instructors>
+              <instructor primary="y">
+                <first>Testy</first>
+                <last>McTesterson</last>
+                <middleInitial>J</middleInitial>
+                <email>tmctesterson@unm.edu</email>
+              </instructor>
+            </instructors>
+            <meeting-times>
+              <meeting-time>
+                <start-date>2023-01-16</start-date>
+                <end-date>2023-05-13</end-date>
+                <days>
+                <day>M</day>
+                <day>R</day>
+                </days>
+                <start-time>1000</start-time>
+                <end-time>1130</end-time>
+                <bldg code="BLDG3">Building 3</bldg>
+                <room>150</room>
+              </meeting-time>
+            </meeting-times>
+            <crosslists>
+            </crosslists>
+          </section>
+        </course>
+        <course number="212" title="Course 2.2">
+          <catalog-description>SUBJ1 212 description</catalog-description>
+          <section crn="50003" number="001" part-of-term="1" status="A">
+            <section-title></section-title>
+            <text></text>
+            <instructional-method code="ENH">Web Enhanced</instructional-method>
+            <delivery-type code="LC">Lecture</delivery-type>
+            <enrollment max="0">0</enrollment>
+            <waitlist max="0">0</waitlist>
+            <credits>3</credits>
+            <fees>0</fees>
+            <instructors>
+              <instructor primary="y">
+                <first>Fake</first>
+                <last>Person</last>
+                <middleInitial>M</middleInitial>
+                <email>fperson@unm.edu</email>
+              </instructor>
+            </instructors>
+            <meeting-times>
+              <meeting-time>
+                <start-date>2023-01-16</start-date>
+                <end-date>2023-05-13</end-date>
+                <days>
+                <day>M</day>
+                <day>W</day>
+                </days>
+                <start-time>1500</start-time>
+                <end-time>1550</end-time>
+                <bldg code="BLDG1">Building 1</bldg>
+                <room>103</room>
+              </meeting-time>
+            </meeting-times>
+            <crosslists>
+              <section crn="50004" subject="SUBJ2" number="212"/>
+            </crosslists>
+          </section>
+          <section crn="50004" number="002" part-of-term="1" status="A">
+            <section-title></section-title>
+            <text></text>
+            <instructional-method code="ENH">Web Enhanced</instructional-method>
+            <delivery-type code="LC">Lecture</delivery-type>
+            <enrollment max="0">0</enrollment>
+            <waitlist max="0">0</waitlist>
+            <credits>3</credits>
+            <fees>0</fees>
+            <instructors>
+              <instructor primary="y">
+                <first>Fake</first>
+                <last>Person</last>
+                <middleInitial>M</middleInitial>
+                <email>fperson@unm.edu</email>
+              </instructor>
+            </instructors>
+            <meeting-times>
+              <meeting-time>
+                <start-date>2023-01-16</start-date>
+                <end-date>2023-05-13</end-date>
+                <days>
+                <day>T</day>
+                <day>R</day>
+                </days>
+                <start-time>1300</start-time>
+                <end-time>1430</end-time>
+                <bldg code="BLDG2">Building 2</bldg>
+                <room>120</room>
+              </meeting-time>
+            </meeting-times>
+            <crosslists>
+              <section crn="50003" subject="SUBJ2" number="212"/>
+            </crosslists>
+          </section>
+        </course>
+      </subject>
+    </department>
+  </college>
+</campus>
+<campus code="GA" name="Gallup">
+  <college code="COL2" name="College 2">
+    <department code="DEP2" name="Department 2">
+      <subject code="SUBJ2" name="Subject 2">
+        <course number="213" title="Course 2.3">
+          <catalog-description>SUBJ1 213 description</catalog-description>
+          <section crn="50004" number="002" part-of-term="1" status="A">
+            <section-title></section-title>
+            <text></text>
+            <instructional-method code="ENH">Web Enhanced</instructional-method>
+            <delivery-type code="LC">Lecture</delivery-type>
+            <enrollment max="0">0</enrollment>
+            <waitlist max="0">0</waitlist>
+            <credits>3</credits>
+            <fees>0</fees>
+            <instructors>
+              <instructor primary="y">
+                <first>Fake</first>
+                <last>Person</last>
+                <middleInitial>M</middleInitial>
+                <email>fperson@unm.edu</email>
+              </instructor>
+              <instructor primary="n">
+                <first>Testy</first>
+                <last>McTesterson</last>
+                <middleInitial>J</middleInitial>
+                <email>tmctesterson@unm.edu</email>
+              </instructor>
+            </instructors>
+            <meeting-times>
+              <meeting-time>
+                <start-date>2023-01-16</start-date>
+                <end-date>2023-05-13</end-date>
+                <days>
+                <day>U</day>
+                <day>S</day>
+                </days>
+                <start-time>1300</start-time>
+                <end-time>1430</end-time>
+                <bldg code="BLDG4">Building 4</bldg>
+                <room>400</room>
+              </meeting-time>
+              <meeting-time>
+                <start-date>2023-01-16</start-date>
+                <end-date>2023-05-13</end-date>
+                <days>
+                <day>M</day>
+                <day>F</day>
+                </days>
+                <start-time>0800</start-time>
+                <end-time>1030</end-time>
+                <bldg code="BLDG4">Building 4</bldg>
+                <room>400</room>
+              </meeting-time>
+            </meeting-times>
+            <crosslists>
+            </crosslists>
+          </section>
+        </course>
+      </subject>
+    </department>
+  </college>
+</campus>
+</semester>
+</unmschedule>
