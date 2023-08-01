@@ -52,6 +52,8 @@ defmodule UnmClassScheduler.MixProject do
       {:saxy, "~> 1.5"},
       {:mox, "~> 1.0", only: :test},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
+      {:faker, "~> 0.17", only: :test},
+      {:ex_machina, "~> 2.7.0", only: :test},
     ]
   end
 
@@ -66,7 +68,7 @@ defmodule UnmClassScheduler.MixProject do
       setup: ["deps.get", "ecto.setup"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.drop --quiet", "ecto.create --quiet", "ecto.migrate --quiet", "run priv/repo/test_seeds.exs", "test"],
+      test: ["ecto.drop --quiet", "ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.deploy": ["esbuild default --minify", "phx.digest"]
     ]
   end
