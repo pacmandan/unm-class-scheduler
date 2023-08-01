@@ -4,9 +4,15 @@ defmodule UnmClassScheduler.SearchTest do
   use UnmClassScheduler.DataCase
 
   alias UnmClassScheduler.Search
-  alias UnmClassScheduler.Search.SectionResult
+
+  import UnmClassScheduler.Factory
 
   doctest UnmClassScheduler.Search
+
+  setup do
+    factory_default()
+    :ok
+  end
 
   test "find_sections/1 builds query, returns section results" do
     params = %{semester: "202310", campus: "ABQ", subject: "SUBJ2", course: "212"}
@@ -21,8 +27,8 @@ defmodule UnmClassScheduler.SearchTest do
         crosslists: [],
         delivery_type: %{code: "LC", name: "Lecture"},
         department: %{code: "DEP2", name: "Department 2"},
-        enrollment: 0,
-        enrollment_max: 0,
+        enrollment: 10,
+        enrollment_max: 30,
         fees: 0.0,
         instructional_method: %{code: "ENH", name: "Web Enhanced"},
         instructors: [%{email: "fperson@unm.edu", first: "Fake", last: "Person", middle_initial: "S", primary: true}],
@@ -34,8 +40,8 @@ defmodule UnmClassScheduler.SearchTest do
         subject: %{code: "SUBJ2", name: "Subject 2"},
         text: "",
         title: "",
-        waitlist: 0,
-        waitlist_max: 0,
+        waitlist: 15,
+        waitlist_max: 25,
       },
       %{
         campus: %{code: "ABQ", name: "Albuquerque/Main"},
@@ -47,8 +53,8 @@ defmodule UnmClassScheduler.SearchTest do
         crosslists: [],
         delivery_type: %{code: "LC", name: "Lecture"},
         department: %{code: "DEP2", name: "Department 2"},
-        enrollment: 0,
-        enrollment_max: 0,
+        enrollment: 10,
+        enrollment_max: 30,
         fees: 0.0,
         instructional_method: %{code: "ENH", name: "Web Enhanced"},
         instructors: [%{email: "fperson@unm.edu", first: "Fake", last: "Person", middle_initial: "S", primary: true}],
@@ -60,8 +66,8 @@ defmodule UnmClassScheduler.SearchTest do
         subject: %{code: "SUBJ2", name: "Subject 2"},
         text: "",
         title: "",
-        waitlist: 0,
-        waitlist_max: 0,
+        waitlist: 15,
+        waitlist_max: 25,
       },
     ]
 

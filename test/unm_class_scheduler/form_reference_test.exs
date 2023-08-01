@@ -5,7 +5,14 @@ defmodule UnmClassScheduler.FormReferenceTest do
 
   alias UnmClassScheduler.FormReference
 
+  import UnmClassScheduler.Factory
+
   doctest UnmClassScheduler.FormReference
+
+  setup do
+    factory_default()
+    :ok
+  end
 
   test "fetch_semesters/0 returns all semesters" do
     semesters = FormReference.fetch_semesters()

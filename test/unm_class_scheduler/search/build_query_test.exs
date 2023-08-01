@@ -5,9 +5,17 @@ defmodule UnmClassScheduler.Search.BuildQueryTest do
 
   alias UnmClassScheduler.Search.BuildQuery
 
+  import UnmClassScheduler.Factory
+
   doctest UnmClassScheduler.Search.BuildQuery
 
   describe "build/1" do
+
+    setup do
+      factory_default()
+      :ok
+    end
+
     test "with only semester params" do
       crns = %{semester: "202310"}
       |> BuildQuery.build()
