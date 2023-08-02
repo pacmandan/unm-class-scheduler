@@ -1,4 +1,4 @@
-defmodule UnmClassScheduler.ScheduleParser.ExtractedItem do
+defmodule UnmClassScheduler.DBUpdater.ExtractedItem do
   @moduledoc """
   Represents an abstract extracted record from an XML file.
 

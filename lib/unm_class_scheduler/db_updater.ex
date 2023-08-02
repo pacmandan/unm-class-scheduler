@@ -1,10 +1,10 @@
-defmodule UnmClassScheduler.ScheduleParser do
-  # TODO: Rename this & Updater
+defmodule UnmClassScheduler.DBUpdater do
   @moduledoc """
+  Primary module called by updater processes.
   """
-  alias UnmClassScheduler.ScheduleParser.Updater
-  alias UnmClassScheduler.ScheduleParser.XMLExtractor
-  alias UnmClassScheduler.ScheduleParser.FileDownloader
+  alias UnmClassScheduler.DBUpdater.Insert
+  alias UnmClassScheduler.DBUpdater.XMLExtractor
+  alias UnmClassScheduler.DBUpdater.FileDownloader
 
   # @urls [
   #   "https://xmlschedule.unm.edu/current.xml",
@@ -27,7 +27,7 @@ defmodule UnmClassScheduler.ScheduleParser do
   def load_from_files(files) do
     files
     |> XMLExtractor.extract_from()
-    |> Updater.mass_insert()
+    |> Insert.mass_insert()
   end
 
   @spec get_downloader() :: module()

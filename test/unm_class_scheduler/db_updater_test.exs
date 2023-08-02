@@ -1,4 +1,4 @@
-defmodule UnmClassScheduler.ScheduleParserTest do
+defmodule UnmClassScheduler.DBUpdaterTest do
   @moduledoc false
   use ExUnit.Case, async: true
   use UnmClassScheduler.DataCase
@@ -6,9 +6,9 @@ defmodule UnmClassScheduler.ScheduleParserTest do
   import Mox
   import UnmClassScheduler.Factory
 
-  alias UnmClassScheduler.ScheduleParser
+  alias UnmClassScheduler.DBUpdater
 
-  doctest UnmClassScheduler.ScheduleParser
+  doctest UnmClassScheduler.DBUpdater
 
   setup :verify_on_exit!
 
@@ -19,11 +19,11 @@ defmodule UnmClassScheduler.ScheduleParserTest do
   end
 
   test "sample XML loads and imports correctly" do
-    UnmClassScheduler.ScheduleParser.MockFileDownloader
+    UnmClassScheduler.DBUpdater.MockFileDownloader
     |> expect(:download_all, fn _urls -> {:ok, ["./test/support/samplexml.xml"]} end)
     |> expect(:cleanup_files, fn _files -> :ok end)
 
-    assert :ok == ScheduleParser.download_and_run(["fakeurl"])
+    assert :ok == DBUpdater.download_and_run(["fakeurl"])
 
     # The actual Updater module has more tests. This only assures the correct number were inserted
     # based on assumptions from the samplexml file.

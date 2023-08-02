@@ -1,8 +1,7 @@
-defmodule UnmClassScheduler.ScheduleParser.XMLExtractorTest do
+defmodule UnmClassScheduler.DBUpdater.XMLExtractorTest do
     @moduledoc false
     use ExUnit.Case, async: true
 
-    alias UnmClassScheduler.ScheduleParser.XMLExtractor
     alias UnmClassScheduler.Catalog.Semester
     alias UnmClassScheduler.Catalog.Campus
     alias UnmClassScheduler.Catalog.Building
@@ -19,9 +18,10 @@ defmodule UnmClassScheduler.ScheduleParser.XMLExtractorTest do
     alias UnmClassScheduler.Catalog.Status
     alias UnmClassScheduler.Catalog.InstructionalMethod
     alias UnmClassScheduler.Catalog.DeliveryType
-    alias UnmClassScheduler.ScheduleParser.ExtractedItem, as: E
+    alias UnmClassScheduler.DBUpdater.XMLExtractor
+    alias UnmClassScheduler.DBUpdater.ExtractedItem, as: E
 
-    doctest UnmClassScheduler.ScheduleParser.XMLExtractor
+    doctest UnmClassScheduler.DBUpdater.XMLExtractor
 
     @testfile1 "./test/support/samplexml.xml"
 
