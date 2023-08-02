@@ -1,18 +1,11 @@
 defmodule UnmClassScheduler.SearchTest do
   @moduledoc false
-  use ExUnit.Case, async: true
-  use UnmClassScheduler.DataCase
+  use ExUnit.Case, async: false
+  use UnmClassScheduler.FactoryDefaultCase
 
   alias UnmClassScheduler.Search
 
-  import UnmClassScheduler.Factory
-
   doctest UnmClassScheduler.Search
-
-  setup do
-    factory_default()
-    :ok
-  end
 
   test "find_sections/1 builds query, returns section results" do
     params = %{semester: "202310", campus: "ABQ", subject: "SUBJ2", course: "212"}

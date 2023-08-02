@@ -151,7 +151,9 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   end
 
   defp insert_records(repo, attrs_to_insert, schema, cache_key_fn \\ &get_code/1) do
-    Enum.map(attrs_to_insert, fn %{fields: f} ->
+    attrs_to_insert
+    |> List.wrap()
+    |> Enum.map(fn %{fields: f} ->
       {:ok, valid_f} = schema.validate_data(f)
       valid_f
       |> merge_placeholders()
@@ -163,7 +165,9 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   end
 
   defp insert_linked_records(repo, cache, attrs_to_insert, schema, cache_key_fn \\ &get_code/2) do
-    Enum.map(attrs_to_insert, fn %{fields: f, associations: a} ->
+    attrs_to_insert
+    |> List.wrap()
+    |> Enum.map(fn %{fields: f, associations: a} ->
       parent = get_in(cache, [schema.parent_module(), a[schema.parent_module()][:code]])
       {:ok, valid_f} = schema.validate_data(f, [{schema.parent_key(), parent}])
       valid_f
@@ -177,7 +181,9 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   end
 
   defp insert_sections(repo, cache, attrs_to_insert) do
-    Stream.map(attrs_to_insert, fn %{fields: f, associations: a} ->
+    attrs_to_insert
+    |> List.wrap()
+    |> Stream.map(fn %{fields: f, associations: a} ->
       course = get_in(cache, [Course, course_code(a[Subject][:code], a[Course][:number])])
       semester = get_in(cache, [Semester, a[Semester][:code]])
       part_of_term = get_in(cache, [PartOfTerm, a[PartOfTerm][:code]])
@@ -211,7 +217,9 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   end
 
   defp insert_meeting_times(repo, cache, attrs_to_insert) do
-    Stream.map(attrs_to_insert, fn %{fields: f, associations: a} ->
+    attrs_to_insert
+    |> List.wrap()
+    |> Stream.map(fn %{fields: f, associations: a} ->
       section = get_in(cache, [Section, "#{a[Section][:crn]}__#{a[Semester][:code]}"])
       building = get_in(cache, [Building, building_code(a[Campus][:code], a[Building][:code])])
       {:ok, valid_f} = MeetingTime.validate_data(f, section: section, building: building)
@@ -226,7 +234,9 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   end
 
   defp insert_crosslists(repo, cache, attrs_to_insert) do
-    Stream.map(attrs_to_insert, fn %{fields: f, associations: a} ->
+    attrs_to_insert
+    |> List.wrap()
+    |> Stream.map(fn %{fields: f, associations: a} ->
       section = get_in(cache, [Section, "#{a[:section][:crn]}__#{a[Semester][:code]}"])
       crosslist = get_in(cache, [Section, "#{a[:crosslist][:crn]}__#{a[Semester][:code]}"])
 
@@ -246,7 +256,9 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   end
 
   defp insert_instructors_sections(repo, cache, attrs_to_insert) do
-    Enum.map(attrs_to_insert, fn %{fields: f, associations: a} ->
+    attrs_to_insert
+    |> List.wrap()
+    |> Enum.map(fn %{fields: f, associations: a} ->
       section = get_in(cache, [Section, "#{a[Section][:crn]}__#{a[Semester][:code]}"])
       instructor = get_in(cache, [Instructor, "#{a[Instructor][:email]}_#{a[Instructor][:first]}_#{a[Instructor][:last]}"])
 
@@ -282,7 +294,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   end
 
   defp delete_not_updated(updated, repo, type) do
-    uuids = updated |> Enum.map((&(&1.uuid)))
+    uuids = updated |> List.wrap() |> Enum.map((&(&1.uuid)))
     q = from(i in type, where: i.uuid not in ^uuids)
     repo.delete_all(q)
   end

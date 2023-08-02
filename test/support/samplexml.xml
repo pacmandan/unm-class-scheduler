@@ -249,7 +249,7 @@
       <subject code="SUBJ2" name="Subject 2">
         <course number="213" title="Course 2.3">
           <catalog-description>SUBJ1 213 description</catalog-description>
-          <section crn="50004" number="002" part-of-term="1" status="A">
+          <section crn="50005" number="002" part-of-term="1" status="A">
             <section-title></section-title>
             <text></text>
             <instructional-method code="ENH">Web Enhanced</instructional-method>
