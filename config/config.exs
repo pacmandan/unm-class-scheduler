@@ -26,7 +26,7 @@ config :unm_class_scheduler, UnmClassSchedulerWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :unm_class_scheduler, UnmClassScheduler.Mailer, adapter: Swoosh.Adapters.Local
 
-config :unm_class_scheduler, file_downloader: UnmClassScheduler.ScheduleParser.FileDownloader
+config :unm_class_scheduler, file_downloader: UnmClassScheduler.DBUpdater.FileDownloader
 
 # Swoosh API client is needed for adapters other than SMTP.
 config :swoosh, :api_client, false

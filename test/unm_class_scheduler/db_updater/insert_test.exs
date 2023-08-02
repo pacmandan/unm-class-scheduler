@@ -1,4 +1,4 @@
-defmodule UnmClassScheduler.ScheduleParser.UpdaterTest do
+defmodule UnmClassScheduler.DBUpdater.InsertTest do
   @moduledoc false
   use ExUnit.Case, async: true
   use UnmClassScheduler.DataCase
@@ -22,12 +22,12 @@ defmodule UnmClassScheduler.ScheduleParser.UpdaterTest do
 
   alias UnmClassScheduler.Repo
 
-  alias UnmClassScheduler.ScheduleParser.Updater
-  alias UnmClassScheduler.ScheduleParser.ExtractedItem, as: E
+  alias UnmClassScheduler.DBUpdater.Insert
+  alias UnmClassScheduler.DBUpdater.ExtractedItem, as: E
 
   import UnmClassScheduler.Factory
 
-  doctest UnmClassScheduler.ScheduleParser.Updater
+  doctest UnmClassScheduler.DBUpdater.Insert
 
   setup do
     init_static_tables()
@@ -41,7 +41,7 @@ defmodule UnmClassScheduler.ScheduleParser.UpdaterTest do
         Semester => [%E{fields: %{code: "2023XX", name: "Test 2023"}}],
       }
 
-      Updater.mass_insert(params)
+      Insert.mass_insert(params)
 
       inserted = Repo.all(Semester) |> List.first()
 
@@ -60,7 +60,7 @@ defmodule UnmClassScheduler.ScheduleParser.UpdaterTest do
         ]
       }
 
-      Updater.mass_insert(params)
+      Insert.mass_insert(params)
 
       [campus1, campus2] = Repo.all(Campus) |> Enum.sort()
       assert campus1.code == "ABQ"
@@ -89,7 +89,7 @@ defmodule UnmClassScheduler.ScheduleParser.UpdaterTest do
         ],
       }
 
-      Updater.mass_insert(params)
+      Insert.mass_insert(params)
 
       [bldg1, bldg2, bldg4] = Repo.all(Building) |> Repo.preload(:campus) |> Enum.sort()
 
@@ -187,7 +187,7 @@ defmodule UnmClassScheduler.ScheduleParser.UpdaterTest do
         ],
       }
 
-      Updater.mass_insert(params)
+      Insert.mass_insert(params)
 
       # TODO: This is a lot do to assertions on...maybe break up this test?
       # Keep this test for now just so it fails if there are any exceptions thrown.
@@ -211,7 +211,7 @@ defmodule UnmClassScheduler.ScheduleParser.UpdaterTest do
         Semester => [%E{fields: %{code: "2023XX", name: "Test 2023"}}],
       }
 
-      Updater.mass_insert(params)
+      Insert.mass_insert(params)
 
       semesters = Repo.all(Semester)
       assert length(semesters) == 1
@@ -230,7 +230,7 @@ defmodule UnmClassScheduler.ScheduleParser.UpdaterTest do
         Semester => [%E{fields: %{code: "2023XX", name: "NEW NAME"}}],
       }
 
-      Updater.mass_insert(params)
+      Insert.mass_insert(params)
 
       semesters = Repo.all(Semester)
       assert length(semesters) == 1
@@ -251,7 +251,7 @@ defmodule UnmClassScheduler.ScheduleParser.UpdaterTest do
         Semester => [%E{fields: %{code: "2024XX", name: "Test 2024"}}],
       }
 
-      Updater.mass_insert(params)
+      Insert.mass_insert(params)
 
       semesters = Repo.all(Semester)
       assert length(semesters) == 1

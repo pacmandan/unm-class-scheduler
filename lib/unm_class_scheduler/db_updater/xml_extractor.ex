@@ -1,4 +1,4 @@
-defmodule UnmClassScheduler.ScheduleParser.XMLExtractor do
+defmodule UnmClassScheduler.DBUpdater.XMLExtractor do
   @moduledoc """
   Saxy Parser event handler for parsing schedule XML files.
   """
@@ -21,7 +21,7 @@ defmodule UnmClassScheduler.ScheduleParser.XMLExtractor do
   alias UnmClassScheduler.Catalog.Status
   alias UnmClassScheduler.Catalog.InstructionalMethod
   alias UnmClassScheduler.Catalog.DeliveryType
-  alias UnmClassScheduler.ScheduleParser.ExtractedItem
+  alias UnmClassScheduler.DBUpdater.ExtractedItem
 
   @type current_state_t :: %{atom() => (ExtractedItem.t() | boolean())}
   @type completed_state_t :: %{atom() => list(ExtractedItem.t())}

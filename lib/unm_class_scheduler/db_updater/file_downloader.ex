@@ -1,5 +1,9 @@
-defmodule UnmClassScheduler.ScheduleParser.FileDownloader do
-  @moduledoc false
+defmodule UnmClassScheduler.DBUpdater.FileDownloader do
+  @moduledoc """
+  Module with functions in charge of downloading and cleaning up schedule files.
+
+  Mockable, since this interacts with external systems.
+  """
   @callback download_all(list(String.t())) :: {:ok, list(String.t())}
   @callback cleanup_files(list(String.t())) :: :ok
 

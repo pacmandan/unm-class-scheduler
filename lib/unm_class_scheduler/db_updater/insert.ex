@@ -1,4 +1,4 @@
-defmodule UnmClassScheduler.ScheduleParser.Updater do
+defmodule UnmClassScheduler.DBUpdater.Insert do
   @moduledoc """
   Takes extracted attributes and inserts them into the Repo.
   """
@@ -21,7 +21,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   alias UnmClassScheduler.Catalog.InstructionalMethod
   alias UnmClassScheduler.Catalog.InstructorSection
 
-  alias UnmClassScheduler.ScheduleParser.XMLExtractor
+  alias UnmClassScheduler.DBUpdater.XMLExtractor
 
   import Ecto.Query
 
