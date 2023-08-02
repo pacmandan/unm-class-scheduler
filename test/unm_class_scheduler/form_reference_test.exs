@@ -1,18 +1,11 @@
 defmodule UnmClassScheduler.FormReferenceTest do
   @moduledoc false
-  use ExUnit.Case, async: true
-  use UnmClassScheduler.DataCase
+  use ExUnit.Case, async: false
+  use UnmClassScheduler.FactoryDefaultCase
 
   alias UnmClassScheduler.FormReference
 
-  import UnmClassScheduler.Factory
-
   doctest UnmClassScheduler.FormReference
-
-  setup do
-    factory_default()
-    :ok
-  end
 
   test "fetch_semesters/0 returns all semesters" do
     semesters = FormReference.fetch_semesters()
