@@ -102,4 +102,6 @@ defmodule UnmClassScheduler.ScheduleParser.XMLExtractorTest do
 
       assert results == expected_results
     end
+
+    # TODO: Test with two files.
 end

@@ -21,9 +21,11 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   alias UnmClassScheduler.Catalog.InstructionalMethod
   alias UnmClassScheduler.Catalog.InstructorSection
 
+  alias UnmClassScheduler.ScheduleParser.XMLExtractor
+
   import Ecto.Query
 
-  @spec mass_insert(map()) :: any()
+  @spec mass_insert(XMLExtractor.completed_state_t()) :: any()
   def mass_insert(extracted_attrs) do
     Ecto.Multi.new()
     |> Ecto.Multi.run(
@@ -273,7 +275,7 @@ defmodule UnmClassScheduler.ScheduleParser.Updater do
   end
 
   # Everything that we didn't update in this round should be deleted.
-  # TODO: Maybe make this optional to the updater?
+  # TODO: Make this optional to the updater?
   # That would give much more flexability in case we need to update just one file or something.
   defp delete_all_not_updated(repo, cache) do
     deleted = %{

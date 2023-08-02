@@ -1,6 +1,7 @@
 defmodule UnmClassScheduler.ScheduleParser do
   # TODO: Rename this & Updater
-  @moduledoc false
+  @moduledoc """
+  """
   alias UnmClassScheduler.ScheduleParser.Updater
   alias UnmClassScheduler.ScheduleParser.XMLExtractor
   alias UnmClassScheduler.ScheduleParser.FileDownloader
@@ -18,6 +19,8 @@ defmodule UnmClassScheduler.ScheduleParser do
     load_from_files(files)
 
     get_downloader().cleanup_files(files)
+
+    :ok
   end
 
   @spec load_from_files(list(String.t())) :: any()

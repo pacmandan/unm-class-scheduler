@@ -29,6 +29,12 @@ defmodule UnmClassScheduler.ScheduleParser.UpdaterTest do
 
   doctest UnmClassScheduler.ScheduleParser.Updater
 
+  setup do
+    init_static_tables()
+
+    :ok
+  end
+
   describe "mass_insert/1" do
     test "inserts Semesters correctly" do
       params = %{
@@ -113,7 +119,6 @@ defmodule UnmClassScheduler.ScheduleParser.UpdaterTest do
     end
 
     test "inserts everything into the database with valid params" do
-      init_static_tables()
       params = %{
         Semester => [%E{fields: %{code: "2023XX", name: "Test 2023"}}],
         Campus => [
@@ -184,9 +189,15 @@ defmodule UnmClassScheduler.ScheduleParser.UpdaterTest do
 
       Updater.mass_insert(params)
 
-      # TODO: This is a lot do to assertions on...
+      # TODO: This is a lot do to assertions on...maybe break up this test?
       # Keep this test for now just so it fails if there are any exceptions thrown.
     end
+
+    # TODO: Test failure scenarios
+    # - Missing static record (delivery type, status, etc.)
+    # - Missing associations
+    # Really I haven't set the module up to handle failures yet, so I need to determine
+    # what the correct behavior should be before I can test that behavior.
   end
 
   describe "mass_insert/1 with existing data" do
