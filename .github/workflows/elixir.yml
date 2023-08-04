@@ -9,11 +9,6 @@ on:
 permissions:
   contents: read
 
-strategy:
-  matrix:
-    otp: ['25.3.2.2']
-    elixir: ['1.15.0']
-
 env:
   MIX_ENV: test
 
@@ -21,6 +16,11 @@ jobs:
   build:
     name: Build and test
     runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        otp: ['25.3.2.2']
+        elixir: ['1.15.0']
 
     services:
       db:
