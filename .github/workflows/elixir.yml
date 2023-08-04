@@ -1,0 +1,79 @@
+name: Elixir CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+
+strategy:
+  matrix:
+    otp: ['25.3.2.2']
+    elixir: ['1.15.0']
+
+env:
+  MIX_ENV: test
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-22.04
+
+    services:
+      db:
+        image: postgres:12
+        ports: ['5432:5432']
+        env:
+          POSTGRES_PASSWORD: localpass
+          POSTGRES_USER: unm_test_user
+          POSTGRES_DB: unm_class_scheduler_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Setup Elixir
+      uses: actions/setup-beam@v1
+      with:
+        otp-version: ${{ matrix.otp }}
+        elixir-version: ${{ matrix.elixir }}
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Cache deps
+      uses: actions/cache@v3
+      id: cache-deps
+      env:
+        cache-name: cache-elixir-deps
+      with:
+        path: deps
+        key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-mix-${{ env.cache-name }}-
+    - name: Cache compiled build
+      id: cache-build
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-compiled-build
+      with:
+        path: _build
+        key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-mix-${{ env.cache-name }}-
+          ${{ runner.os }}-mix-
+    - name: Clean to rule out incremental build as a source of flakiness
+      if: github.run_attempt != '1'
+      run: |
+        mix deps.clean --all
+        mix clean
+      shell: sh
+    - name: Install deps
+      run: mix deps.get
+    - name: Compile
+      run: mix compile --warnings-as-errors
+    - name: Run tests
+      run: mix test
