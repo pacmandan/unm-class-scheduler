@@ -10,6 +10,9 @@ import Config
 config :unm_class_scheduler,
   ecto_repos: [UnmClassScheduler.Repo]
 
+config :unm_class_scheduler,
+  env: config_env()
+
 # Configures the endpoint
 config :unm_class_scheduler, UnmClassSchedulerWeb.Endpoint,
   url: [host: "localhost"],

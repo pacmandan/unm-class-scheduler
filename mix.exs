@@ -5,7 +5,7 @@ defmodule UnmClassScheduler.MixProject do
     [
       app: :unm_class_scheduler,
       version: "0.1.0",
-      elixir: "~> 1.12",
+      elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -20,7 +20,7 @@ defmodule UnmClassScheduler.MixProject do
   def application do
     [
       mod: {UnmClassScheduler.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :httpoison]
     ]
   end
 
@@ -54,6 +54,7 @@ defmodule UnmClassScheduler.MixProject do
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:faker, "~> 0.17", only: :test},
       {:ex_machina, "~> 2.7.0", only: :test},
+      {:httpoison, "~> 2.1"},
     ]
   end
 

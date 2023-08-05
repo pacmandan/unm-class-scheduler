@@ -107,8 +107,10 @@ IO.puts("Inserting Instructional Methods...")
 |> Stream.map(fn {code, name} -> %InstructionalMethod{code: code, name: name} end)
 |> Enum.each(&Repo.insert!/1)
 
-UnmClassScheduler.DBUpdater.load_from_files([
-  "./xmls/current.xml",
-  "./xmls/next1.xml",
-  "./xmls/next2.xml",
-])
+if Application.get_env(:unm_class_scheduler, :env) in [:dev] do
+  UnmClassScheduler.DBUpdater.load_from_files([
+    "./xmls/current.xml",
+    "./xmls/next1.xml",
+    "./xmls/next2.xml",
+  ])
+end

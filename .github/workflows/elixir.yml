@@ -77,3 +77,15 @@ jobs:
       run: mix compile --warnings-as-errors
     - name: Run tests
       run: mix test
+  
+  docker:
+    name: Build Docker Image
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Build container
+      run: docker build
