@@ -4,6 +4,9 @@ defmodule UnmClassScheduler.DBUpdater.FileDownloader do
 
   Mockable, since this interacts with external systems.
   """
+
+  require Logger
+
   @callback download_all(list(String.t())) :: {:ok, list(String.t())}
   @callback cleanup_files(list(String.t())) :: :ok
 
@@ -12,6 +15,7 @@ defmodule UnmClassScheduler.DBUpdater.FileDownloader do
   @impl true
   @spec download_all(list(String.t())) :: {:ok, list(String.t())}
   def download_all(urls) do
+    Application.ensure_all_started([:httpoison])
     dir = get_tmp_dir()
     files = Enum.map(urls, fn url ->
       with filename <- Path.basename(url),
@@ -25,9 +29,13 @@ defmodule UnmClassScheduler.DBUpdater.FileDownloader do
     {:ok, files}
   end
 
-  @spec download_to_file(String.t(), String.t()) :: {:ok, any()} | {:error, any()}
   defp download_to_file(url, file_path) do
-    :httpc.request(:get, {url, []}, [], [stream: String.to_charlist(file_path)])
+    File.rm(file_path)
+    Logger.info("Downloading #{url} to #{file_path}...")
+    %HTTPoison.Response{body: body} = HTTPoison.get!(url)
+    File.write!(file_path, body)
+    Logger.info("#{file_path} downloaded!")
+    {:ok, file_path}
   end
 
   defp get_tmp_dir() do

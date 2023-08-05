@@ -25,8 +25,11 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
 
   import Ecto.Query
 
+  require Logger
+
   @spec mass_insert(XMLExtractor.completed_state_t()) :: any()
   def mass_insert(extracted_attrs) do
+    Logger.info("Beginning mass insert...")
     Ecto.Multi.new()
     |> Ecto.Multi.run(
       PartOfTerm,
@@ -109,6 +112,7 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
       placeholders: placeholders
     )
     |> elem(1)
+    |> tap(fn records -> Logger.info("Inserted #{length(records)} records to #{schema}") end)
   end
 
   defp fetch_coded_and_cache_all(repo, schema) do
@@ -116,7 +120,7 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
     |> Enum.reduce(%{}, fn m, acc ->
       Map.put(acc, m.code, m)
     end)
-    |> (&({:ok, &1})).()
+    |> then(&({:ok, &1}))
   end
 
   defp get_code(i), do: i.code
@@ -163,7 +167,7 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
     |> repo_insert_all(schema, repo, generate_placeholders())
     |> Stream.map((&({cache_key_fn.(&1), &1})))
     |> Enum.into(%{})
-    |> (&({:ok, &1})).()
+    |> then(&({:ok, &1}))
   end
 
   defp insert_linked_records(repo, cache, attrs_to_insert, schema, cache_key_fn \\ &get_code/2) do
@@ -179,7 +183,7 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
     |> repo.preload(schema.parent_key())
     |> Stream.map(fn inserted -> {cache_key_fn.(inserted, schema.get_parent(inserted)), inserted} end)
     |> Enum.into(%{})
-    |> (&({:ok, &1})).()
+    |> then(&({:ok, &1}))
   end
 
   defp insert_sections(repo, cache, attrs_to_insert) do
@@ -215,7 +219,7 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
     |> repo.preload([:semester, course: :subject])
     |> Stream.map((&({"#{&1.crn}__#{&1.semester.code}", &1})))
     |> Enum.into(%{})
-    |> (&({:ok, &1})).()
+    |> then(&({:ok, &1}))
   end
 
   defp insert_meeting_times(repo, cache, attrs_to_insert) do
@@ -232,7 +236,7 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
     |> Stream.chunk_every(3000)
     |> Enum.map(fn list -> repo_insert_all(list, MeetingTime, repo, generate_placeholders()) end)
     |> Enum.reduce([], fn inserted, acc -> acc ++ inserted end)
-    |> (&({:ok, &1})).()
+    |> then(&({:ok, &1}))
   end
 
   defp insert_crosslists(repo, cache, attrs_to_insert) do
@@ -254,7 +258,7 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
     end)
     |> Enum.reject(&is_nil/1)
     |> repo_insert_all(Crosslist, repo, generate_placeholders())
-    |> (&({:ok, &1})).()
+    |> then(&({:ok, &1}))
   end
 
   defp insert_instructors_sections(repo, cache, attrs_to_insert) do
@@ -271,13 +275,14 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
     |> Stream.chunk_every(15_000)
     |> Enum.map(fn list -> repo_insert_all(list, InstructorSection, repo, generate_placeholders()) end)
     |> Enum.reduce([], fn inserted, acc -> acc ++ inserted end)
-    |> (&({:ok, &1})).()
+    |> then(&({:ok, &1}))
   end
 
   # Everything that we didn't update in this round should be deleted.
   # TODO: Make this optional to the updater?
   # That would give much more flexability in case we need to update just one file or something.
   defp delete_all_not_updated(repo, cache) do
+    Logger.info("Deleting records that were not updated...")
     deleted = %{
       InstructorSection => cache[InstructorSection] |> delete_not_updated(repo, InstructorSection),
       Instructor => Map.values(cache[Instructor]) |> delete_not_updated(repo, Instructor),
@@ -297,7 +302,9 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
 
   defp delete_not_updated(updated, repo, type) do
     uuids = updated |> List.wrap() |> Enum.map((&(&1.uuid)))
-    q = from(i in type, where: i.uuid not in ^uuids)
-    repo.delete_all(q)
+
+    from(i in type, where: i.uuid not in ^uuids)
+    |> repo.delete_all()
+    |> tap(fn {count, _} -> Logger.info("Deleted #{count} records from #{type}") end)
   end
 end

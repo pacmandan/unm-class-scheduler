@@ -24,12 +24,6 @@ defmodule UnmClassSchedulerWeb.Router do
     get "/reference/campuses", ReferenceController, :get_campuses
   end
 
-  scope "/", UnmClassSchedulerWeb do
-    pipe_through :browser
-
-    get "/", PageController, :index
-  end
-
   # Other scopes may use custom stacks.
   # scope "/api", UnmClassSchedulerWeb do
   #   pipe_through :api
@@ -50,6 +44,13 @@ defmodule UnmClassSchedulerWeb.Router do
 
       live_dashboard "/dashboard", metrics: UnmClassSchedulerWeb.Telemetry
     end
+  end
+
+  scope "/", UnmClassSchedulerWeb do
+    pipe_through :browser
+
+    get "/", WebappController, :index
+    get "/*path", WebappController, :index
   end
 
   # Enables the Swoosh mailbox preview in development.

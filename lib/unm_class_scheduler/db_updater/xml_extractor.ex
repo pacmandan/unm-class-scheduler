@@ -23,6 +23,8 @@ defmodule UnmClassScheduler.DBUpdater.XMLExtractor do
   alias UnmClassScheduler.Catalog.DeliveryType
   alias UnmClassScheduler.DBUpdater.ExtractedItem
 
+  require Logger
+
   @type current_state_t :: %{atom() => (ExtractedItem.t() | boolean())}
   @type completed_state_t :: %{atom() => list(ExtractedItem.t())}
   @type state_t :: %{
@@ -122,6 +124,7 @@ defmodule UnmClassScheduler.DBUpdater.XMLExtractor do
       # Results from the previous extraction are passed into the next.
       # This concatenates all extracted items as we go,
       # and means we only need to dedup once at the end.
+      Logger.info("Extracting from #{filename}...")
       {:ok, extracted} = File.stream!(Path.expand(filename))
       |> Saxy.parse_stream(__MODULE__, acc)
 
@@ -516,7 +519,7 @@ defmodule UnmClassScheduler.DBUpdater.XMLExtractor do
     |> String.split_at(2)
     |> Tuple.to_list()
     |> Enum.map(&String.to_integer/1)
-    |> (fn [hour, minute] -> Time.new!(hour, minute, 0) end).()
+    |> then(fn [hour, minute] -> Time.new!(hour, minute, 0) end)
 
     ex = ExtractedItem.push_fields(mt, %{start_time: time})
     {:ok, state |> Map.put(:current, update_current(c, MeetingTime, ex))}
@@ -536,7 +539,7 @@ defmodule UnmClassScheduler.DBUpdater.XMLExtractor do
     |> String.split_at(2)
     |> Tuple.to_list()
     |> Enum.map(&String.to_integer/1)
-    |> (fn [hour, minute] -> Time.new!(hour, minute, 0) end).()
+    |> then(fn [hour, minute] -> Time.new!(hour, minute, 0) end)
 
     ex = ExtractedItem.push_fields(mt, %{end_time: time})
     {:ok, state |> Map.put(:current, update_current(c, MeetingTime, ex))}
