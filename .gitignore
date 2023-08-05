@@ -26,9 +26,6 @@ unm_class_scheduler-*.tar
 /priv/static/assets/
 /priv/static/webapp/
 
-# Ignore releases
-/rel/
-
 # Ignore digested assets cache.
 /priv/static/cache_manifest.json
 
