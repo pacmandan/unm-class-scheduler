@@ -111,4 +111,4 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: '${{ secrets.GAR_NAME }}:${{ github.sha }}'
+        tags: '${{ secrets.GAR_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_NAME }}/${{ secrets.GAR_REPO_NAME }}/server:${{ github.sha }}'
