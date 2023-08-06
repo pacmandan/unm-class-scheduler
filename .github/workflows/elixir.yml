@@ -115,3 +115,8 @@ jobs:
         registry: '${{ secrets.GAR_NAME }}'
         username: oauth2accesstoken
         password: ${{ steps.auth.outputs.access_token }}
+    - name: Build and push container
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
