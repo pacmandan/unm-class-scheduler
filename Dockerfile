@@ -24,7 +24,7 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 FROM ${NODE_BUILDER_IMAGE} as node_builder
 WORKDIR /app
 COPY frontend/package.json .
-RUN npm install
+RUN npm ci
 COPY frontend/ .
 RUN npm run build
 
