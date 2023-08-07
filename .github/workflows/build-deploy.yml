@@ -1,4 +1,4 @@
-name: UNM Class Scheduler PR Workflow
+name: UNM Class Scheduler Workflow
 
 on:
   push:
