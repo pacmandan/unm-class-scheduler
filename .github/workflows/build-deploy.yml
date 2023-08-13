@@ -176,7 +176,7 @@ jobs:
       with:
         project_id: ${{ secrets.GCP_PROJECT_NAME }}
     - name: Get short-sha
-      run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+      run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-7`" >> $GITHUB_ENV
     - name: Update migration job
       run: |-
         gcloud run jobs update unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --image ${IMAGE_NAME}:sha-${SHORT_SHA}
