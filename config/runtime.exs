@@ -21,20 +21,25 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() == :prod do
-  database_url =
-    System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """
+  # database_url =
+  #   System.get_env("DATABASE_URL") ||
+  #     raise """
+  #     environment variable DATABASE_URL is missing.
+  #     For example: ecto://USER:PASS@HOST/DATABASE
+  #     """
 
-  maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+  # maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
   config :unm_class_scheduler, UnmClassScheduler.Repo,
     # ssl: true,
-    url: database_url,
+    # url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-    socket_options: maybe_ipv6
+    # socket_options: maybe_ipv6
+    username: System.get_env("PG_USER")
+    password: System.get_env("PG_PASSWORD")
+    database: "unm-class-scheduler"
+    socket_dir: "/cloud_sql/#{System.get_env("PG_CONNECTION_NAME")}"
+
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
@@ -48,7 +53,7 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  host = System.get_env("PHX_HOST") || "example.com"
+  host = System.get_env("PHX_HOST") || "unm-class-scheduler.dangreen.dev"
   port = String.to_integer(System.get_env("PORT") || "4000")
 
   config :unm_class_scheduler, UnmClassSchedulerWeb.Endpoint,
