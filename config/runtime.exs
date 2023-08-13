@@ -35,9 +35,9 @@ if config_env() == :prod do
     # url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     # socket_options: maybe_ipv6
-    username: System.get_env("PG_USER")
-    password: System.get_env("PG_PASSWORD")
-    database: "unm-class-scheduler"
+    username: System.get_env("PG_USER"),
+    password: System.get_env("PG_PASSWORD"),
+    database: "unm-class-scheduler",
     socket_dir: "/cloud_sql/#{System.get_env("PG_CONNECTION_NAME")}"
 
 
