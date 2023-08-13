@@ -177,7 +177,7 @@ jobs:
       run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
     - name: Update migration job
       run: |-
-        gcloud run jobs update unm-class-scheduler-migration --image ${IMAGE_NAME}:${SHORT_SHA}
+        gcloud run jobs update unm-class-scheduler-migration --image ${IMAGE_NAME}:sha-${SHORT_SHA}
     - name: Run migration job
       run: |-
         gcloud run jobs execute unm-class-scheduler-migration --wait
