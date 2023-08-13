@@ -114,7 +114,7 @@ jobs:
       id-token: 'write'
     
     env:
-      DOCKER_REGISTRY: ${{ secrets.GAR_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_NAME }}/unm-class-scheduler
+      DOCKER_REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_NAME }}/unm-class-scheduler
       DOCKER_IMAGE_NAME: server
 
     steps:
@@ -160,7 +160,7 @@ jobs:
       id-token: 'write'
 
     env:
-      IMAGE_NAME: ${{ secrets.GAR_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_NAME }}/unm-class-scheduler/server
+      IMAGE_NAME: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_NAME }}/unm-class-scheduler/server
 
     steps:
     - id: auth
@@ -173,14 +173,16 @@ jobs:
         access_token_lifetime: 300s
     - name: Set up gcloud
       uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_NAME }}
     - name: Get short-sha
       run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
     - name: Update migration job
       run: |-
-        gcloud run jobs update unm-class-scheduler-migration --image ${IMAGE_NAME}:sha-${SHORT_SHA}
+        gcloud run jobs update unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --image ${IMAGE_NAME}:sha-${SHORT_SHA}
     - name: Run migration job
       run: |-
-        gcloud run jobs execute unm-class-scheduler-migration --wait
+        gcloud run jobs execute unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --wait
 
 # TODO: Update service
 # TODO: Update data pull job
