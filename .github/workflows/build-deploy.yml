@@ -169,7 +169,7 @@ jobs:
       with:
         token_format: access_token
         workload_identity_provider: '${{ secrets.WIF_PROVIDER }}'
-        service_account: '${{ secrets.WIF_DOCKER_SERVICE_ACCOUNT }}'
+        service_account: '${{ secrets.WIF_DEPLOYER_SERVICE_ACCOUNT }}'
         access_token_lifetime: 300s
     - name: Set up gcloud
       uses: google-github-actions/setup-gcloud@v1
