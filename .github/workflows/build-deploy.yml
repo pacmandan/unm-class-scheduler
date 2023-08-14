@@ -179,7 +179,7 @@ jobs:
       run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-7`" >> $GITHUB_ENV
     - name: Update migration job
       run: |-
-        gcloud run jobs update unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --image ${IMAGE_NAME}:sha-${SHORT_SHA}
+        gcloud run jobs update unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --image ${IMAGE_NAME}:sha-${SHORT_SHA} --command "/app/bin/unm_class_scheduler" --args "eval","UnmClassScheduler.Release.migrate()"
     - name: Run migration job
       run: |-
         gcloud run jobs execute unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --wait
