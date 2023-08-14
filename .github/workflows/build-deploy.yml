@@ -102,7 +102,7 @@ jobs:
       run: mix compile --warnings-as-errors
     - name: Run tests
       run: mix test
-  
+
   docker:
     name: Build Docker Image
     runs-on: ubuntu-22.04
@@ -112,7 +112,7 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-    
+
     env:
       DOCKER_REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_NAME }}/unm-class-scheduler
       DOCKER_IMAGE_NAME: server
@@ -156,7 +156,7 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
 
     outputs:
-      image-tag: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.sha }}
+      tag: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.sha }}
 
   migrate-db:
     #if: github.event_name != 'pull_request'
@@ -182,7 +182,7 @@ jobs:
         project_id: ${{ secrets.GCP_PROJECT_NAME }}
     - name: Update migration job
       run: |-
-        gcloud run jobs update unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --image ${{ needs.docker.outputs.image-tag }} --command "/app/bin/unm_class_scheduler" --args "eval","UnmClassScheduler.Release.migrate()"
+        gcloud run jobs update unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --image ${{ needs.docker.outputs.tag }} --command "/app/bin/unm_class_scheduler" --args "eval","UnmClassScheduler.Release.migrate()"
     - name: Run migration job
       run: |-
         gcloud run jobs execute unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --wait
