@@ -129,6 +129,11 @@ jobs:
         images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}
         tags: |
           type=sha
+    # Can't find a way to translate the "tags" from the meta step
+    # to other jobs. So we'll just calculate the sha here so we can output it.
+    - name: Calculate sha
+      id: sha
+      run: echo "sha=`echo ${GITHUB_SHA} | cut -c1-7`" >> $GITHUB_OUTPUT
     - id: auth
       name: Authenticate with Google Cloud
       uses: google-github-actions/auth@v1
@@ -151,7 +156,7 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
 
     outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
+      image-tag: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.sha }}
 
   migrate-db:
     #if: github.event_name != 'pull_request'
