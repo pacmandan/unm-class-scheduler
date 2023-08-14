@@ -117,6 +117,9 @@ jobs:
       DOCKER_REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_NAME }}/unm-class-scheduler
       DOCKER_IMAGE_NAME: server
 
+    outputs:
+      tag: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.sha }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -154,9 +157,6 @@ jobs:
         push: true
         #push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
-
-    outputs:
-      tag: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.sha }}
 
   migrate-db:
     #if: github.event_name != 'pull_request'
@@ -213,6 +213,6 @@ jobs:
       uses: google-github-actions/deploy-cloudrun@v1
       with:
         service: unm-class-scheduler
-        image: ${{ needs.docker.outputs.image-tag }}
+        image: ${{ needs.docker.outputs.tag }}
 
 # TODO: Update data pull job
