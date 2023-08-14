@@ -38,7 +38,7 @@ if config_env() == :prod do
     username: System.get_env("PG_USER"),
     password: System.get_env("PG_PASSWORD"),
     database: "unm-class-scheduler",
-    socket_dir: "/cloud_sql/#{System.get_env("PG_CONNECTION_NAME")}"
+    socket_dir: "/cloudsql/#{System.get_env("PG_CONNECTION_NAME")}"
 
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
