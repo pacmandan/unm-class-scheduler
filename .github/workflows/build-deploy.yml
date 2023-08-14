@@ -150,6 +150,9 @@ jobs:
         #push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
 
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags[0] }}
+
   migrate-db:
     #if: github.event_name != 'pull_request'
     name: Run Database Migration
@@ -158,9 +161,6 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-
-    env:
-      IMAGE_NAME: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_NAME }}/unm-class-scheduler/server
 
     steps:
     - id: auth
@@ -175,15 +175,39 @@ jobs:
       uses: google-github-actions/setup-gcloud@v1
       with:
         project_id: ${{ secrets.GCP_PROJECT_NAME }}
-    - name: Get short-sha
-      run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-7`" >> $GITHUB_ENV
     - name: Update migration job
       run: |-
-        gcloud run jobs update unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --image ${IMAGE_NAME}:sha-${SHORT_SHA} --command "/app/bin/unm_class_scheduler" --args "eval","UnmClassScheduler.Release.migrate()"
+        gcloud run jobs update unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --image ${{ needs.docker.outputs.image-tag }} --command "/app/bin/unm_class_scheduler" --args "eval","UnmClassScheduler.Release.migrate()"
     - name: Run migration job
       run: |-
         gcloud run jobs execute unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --wait
 
-# TODO: Update service
+  deploy-service:
+    #if: github.event_name != 'pull_request'
+    name: Deploy service
+    runs-on: ubuntu-22.04
+    needs: [docker, migrate-db]
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+    - id: auth
+      name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        token_format: access_token
+        workload_identity_provider: '${{ secrets.WIF_PROVIDER }}'
+        service_account: '${{ secrets.WIF_DEPLOYER_SERVICE_ACCOUNT }}'
+        access_token_lifetime: 300s
+    # - name: Set up gcloud
+    #   uses: google-github-actions/setup-gcloud@v1
+    #   with:
+    #     project_id: ${{ secrets.GCP_PROJECT_NAME }}
+    - name: Update service
+      uses: google-github-actions/deploy-cloudrun@v1
+      with:
+        service: unm-class-scheduler
+        image: ${{ needs.docker.outputs.image-tag }}
+
 # TODO: Update data pull job
-# TODO: Include job/service config files for deployment?
