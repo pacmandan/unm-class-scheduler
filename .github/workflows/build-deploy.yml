@@ -151,7 +151,7 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
 
     outputs:
-      image-tag: ${{ steps.meta.outputs.tags[0] }}
+      image-tag: ${{ steps.meta.outputs.tags }}
 
   migrate-db:
     #if: github.event_name != 'pull_request'
