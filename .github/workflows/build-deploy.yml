@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+env:
+  DOCKER_REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_NAME }}/unm-class-scheduler
+  DOCKER_IMAGE_NAME: server
+
 jobs:
   test-frontend:
     name: Build and test frontend
@@ -113,13 +117,6 @@ jobs:
       contents: 'read'
       id-token: 'write'
 
-    env:
-      DOCKER_REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_NAME }}/unm-class-scheduler
-      DOCKER_IMAGE_NAME: server
-
-    outputs:
-      tag: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.sha }}
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -132,11 +129,6 @@ jobs:
         images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}
         tags: |
           type=sha
-    # Can't find a way to translate the "tags" from the meta step
-    # to other jobs. So we'll just calculate the sha here so we can output it.
-    - name: Calculate sha
-      id: sha
-      run: echo "sha=`echo ${GITHUB_SHA} | cut -c1-7`" >> $GITHUB_OUTPUT
     - id: auth
       name: Authenticate with Google Cloud
       uses: google-github-actions/auth@v1
@@ -180,9 +172,12 @@ jobs:
       uses: google-github-actions/setup-gcloud@v1
       with:
         project_id: ${{ secrets.GCP_PROJECT_NAME }}
+    - name: Get short-sha
+      id: sha
+      run: echo "short_sha=`echo ${GITHUB_SHA} | cut -c1-7`" >> $GITHUB_OUTPUT
     - name: Update migration job
       run: |-
-        gcloud run jobs update unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --image ${{ needs.docker.outputs.tag }} --command "/app/bin/unm_class_scheduler" --args "eval","UnmClassScheduler.Release.migrate()"
+        gcloud run jobs update unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --image ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.short_sha }} --command "/app/bin/unm_class_scheduler" --args "eval","UnmClassScheduler.Release.migrate()"
     - name: Run migration job
       run: |-
         gcloud run jobs execute unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --wait
@@ -191,7 +186,7 @@ jobs:
     #if: github.event_name != 'pull_request'
     name: Deploy service
     runs-on: ubuntu-22.04
-    needs: [docker, migrate-db]
+    needs: [migrate-db]
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -209,10 +204,13 @@ jobs:
     #   uses: google-github-actions/setup-gcloud@v1
     #   with:
     #     project_id: ${{ secrets.GCP_PROJECT_NAME }}
+    - name: Get short-sha
+      id: sha
+      run: echo "short_sha=`echo ${GITHUB_SHA} | cut -c1-7`" >> $GITHUB_OUTPUT
     - name: Update service
       uses: google-github-actions/deploy-cloudrun@v1
       with:
         service: unm-class-scheduler
-        image: ${{ needs.docker.outputs.tag }}
+        image: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.short_sha }}
 
 # TODO: Update data pull job
