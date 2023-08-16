@@ -200,10 +200,6 @@ jobs:
         workload_identity_provider: '${{ secrets.WIF_PROVIDER }}'
         service_account: '${{ secrets.WIF_DEPLOYER_SERVICE_ACCOUNT }}'
         access_token_lifetime: 300s
-    # - name: Set up gcloud
-    #   uses: google-github-actions/setup-gcloud@v1
-    #   with:
-    #     project_id: ${{ secrets.GCP_PROJECT_NAME }}
     - name: Get short-sha
       id: sha
       run: echo "short_sha=`echo ${GITHUB_SHA} | cut -c1-7`" >> $GITHUB_OUTPUT
@@ -213,4 +209,31 @@ jobs:
         service: unm-class-scheduler
         image: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.short_sha }}
 
-# TODO: Update data pull job
+  deploy-updater:
+    #if: github.event_name != 'pull_request'
+    name: Update the updater job
+    runs-on: ubuntu-22.04
+    needs: [migrate-db]
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+    - id: auth
+      name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        token_format: access_token
+        workload_identity_provider: '${{ secrets.WIF_PROVIDER }}'
+        service_account: '${{ secrets.WIF_DEPLOYER_SERVICE_ACCOUNT }}'
+        access_token_lifetime: 300s
+    - name: Set up gcloud
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_NAME }}
+    - name: Get short-sha
+      id: sha
+      run: echo "short_sha=`echo ${GITHUB_SHA} | cut -c1-7`" >> $GITHUB_OUTPUT
+    - name: Update migration job
+      run: |-
+        gcloud run jobs update unm-db-updater --region ${{ secrets.GCP_REGION }} --image ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.short_sha }} --command "/app/bin/unm_class_scheduler" --args "eval","UnmClassScheduler.Release.migrate()"
