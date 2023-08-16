@@ -236,4 +236,4 @@ jobs:
       run: echo "short_sha=`echo ${GITHUB_SHA} | cut -c1-7`" >> $GITHUB_OUTPUT
     - name: Update migration job
       run: |-
-        gcloud run jobs update unm-db-updater --region ${{ secrets.GCP_REGION }} --image ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.short_sha }} --command "/app/bin/unm_class_scheduler" --args "eval","UnmClassScheduler.Release.migrate()"
+        gcloud run jobs update unm-db-updater --region ${{ secrets.GCP_REGION }} --image ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.short_sha }} --command "/app/bin/unm_class_scheduler" --args "eval","UnmClassScheduler.DBUpdater.download_and_run()"
