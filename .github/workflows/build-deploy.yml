@@ -151,7 +151,7 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
 
   migrate-db:
-    #if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request'
     name: Run Database Migration
     runs-on: ubuntu-22.04
     needs: [docker]
@@ -183,7 +183,7 @@ jobs:
         gcloud run jobs execute unm-class-scheduler-migration --region ${{ secrets.GCP_REGION }} --wait
 
   deploy-service:
-    #if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request'
     name: Deploy service
     runs-on: ubuntu-22.04
     needs: [migrate-db]
@@ -210,7 +210,7 @@ jobs:
         image: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:sha-${{ steps.sha.outputs.short_sha }}
 
   deploy-updater:
-    #if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request'
     name: Update the updater job
     runs-on: ubuntu-22.04
     needs: [migrate-db]
