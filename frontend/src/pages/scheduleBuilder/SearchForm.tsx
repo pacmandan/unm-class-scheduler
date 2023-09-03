@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
-import { AppDispatch, RootState } from "./store";
+import { AppDispatch, RootState } from "@/store";
 import { useDispatch } from "react-redux";
-import { fetchResults } from "./features/search";
+import { fetchResults } from "@/features/search";
 
 interface SearchFormElements extends HTMLFormControlsCollection {
   semester: HTMLSelectElement;
@@ -40,16 +40,22 @@ const SearchForm = () => {
   }
 
   return (<form onSubmit={submitForm}>
-    <label>Semester</label>
-    <select id="semester">{semesters.map((semester) => (<option key={semester.code} value={semester.code}>{semester.name}</option>))}</select>
-    <label>Campus</label>
-    <select id="campus">{campuses.map((campus) => (<option key={campus.code} value={campus.code}>{campus.name}</option>))}</select>
-    <label>Subject</label>
-    <select id="subject">{
-      subjects.sort((a, b) => (a.code > b.code) ? 1 : -1)
-      .map((subject) => (<option key={subject.code} value={subject.code}>{subject.code} - {subject.name}</option>))
-    }</select>
-    <button type="submit">Search!</button>
+    <span className="ml-4">
+      <label>Semester</label>
+      <select id="semester">{semesters.map((semester) => (<option key={semester.code} value={semester.code}>{semester.name}</option>))}</select>
+    </span>
+    <span className="ml-4">
+      <label>Campus</label>
+      <select id="campus">{campuses.map((campus) => (<option key={campus.code} value={campus.code}>{campus.name}</option>))}</select>
+    </span>
+    <span className="ml-4">
+      <label>Subject</label>
+      <select id="subject">{
+        subjects.sort((a, b) => (a.code > b.code) ? 1 : -1)
+        .map((subject) => (<option key={subject.code} value={subject.code}>{subject.code} - {subject.name}</option>))
+      }</select>
+    </span>
+    <button className="ml-4 bg-slate-100 border-2 w-32" type="submit">Search</button>
   </form>)
 }
 

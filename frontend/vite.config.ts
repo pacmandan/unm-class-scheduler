@@ -1,9 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
+  },
   // Forward all requests made by our React frontend to `localhost:3000/api`
   // to our Phoenix backend running at `localhost:4000`.
   // This is only necessary during development.

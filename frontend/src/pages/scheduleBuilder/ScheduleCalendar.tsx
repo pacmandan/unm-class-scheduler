@@ -1,8 +1,8 @@
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid'
-import { MeetingTime, Section, Day } from './catalog';
+import { MeetingTime, SelectedSection, Day } from '@/catalog';
 import { useSelector } from 'react-redux';
-import { RootState } from './store';
+import { RootState } from '@/store';
 
 const daysMap: any = {
   'U': '0',
@@ -14,13 +14,14 @@ const daysMap: any = {
   'S': '6',
 }
 
-const meetingTimeToEvent = (section: Section, meetingTime: MeetingTime) => {
-  console.log(section)
+const meetingTimeToEvent = (selected: SelectedSection, meetingTime: MeetingTime) => {
+  console.log(selected)
   let mt = {
-    title: `${section.subject.code} ${section.course.title}.${section.number}`,
+    title: `${selected.section.subject.code}${selected.section.course.number} ${selected.section.number}`,
     startTime: meetingTime.start_time.slice(0, 5),
     endTime: meetingTime.end_time.slice(0, 5),
-    daysOfWeek: meetingTime.days.map((day: Day) => daysMap[day])
+    daysOfWeek: meetingTime.days.map((day: Day) => daysMap[day]),
+    backgroundColor: selected.color
   }
   console.log(mt)
   return mt;
@@ -28,22 +29,22 @@ const meetingTimeToEvent = (section: Section, meetingTime: MeetingTime) => {
 
 const ScheduleCalendar = () => {
   const schedule = useSelector((state: RootState) => state.schedule)
-  const events = Object.entries(schedule.selected).map(([_crn, section]) => {
-    return section.meeting_times.map((meetingTime) => {
-      return meetingTimeToEvent(section, meetingTime)
+  const events = Object.entries(schedule.selected).map(([_crn, selected]) => {
+    return selected.section.meeting_times.map((meetingTime) => {
+      return meetingTimeToEvent(selected, meetingTime)
     })
   }).flat()
-  console.log(events)
   return (<FullCalendar
     plugins={[ timeGridPlugin ]}
     initialView='timeGridWeek'
+    //slotDuration={'01:00:00'}
     allDaySlot={false}
     headerToolbar={false}
     initialDate={'2022-01-01'}
     dayHeaderFormat={{weekday: 'short'}}
-    height={"auto"}
-    aspectRatio={1.35}
+    height={"100%"}
     events={events}
+    //displayEventTime={false}
   />)
 }
 

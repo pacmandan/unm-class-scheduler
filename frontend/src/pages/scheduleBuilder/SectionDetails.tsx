@@ -1,4 +1,4 @@
-import { Section } from './catalog'
+import { Section } from '@/catalog'
 
 const SectionDetails = ({section}: {section: Section}) => {
   return (<>
