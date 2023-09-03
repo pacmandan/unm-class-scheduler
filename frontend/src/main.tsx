@@ -3,21 +3,21 @@ import ReactDOM from 'react-dom/client'
 import { Provider } from 'react-redux'
 import store from './store'
 import App from './App'
-import HomePage from './Home'
-import AboutPage from './About'
+import HomePage from './pages/Home'
+import AboutPage from './pages/About'
 import {
   createBrowserRouter,
   RouterProvider,
 } from 'react-router-dom'
 import './index.css'
-import Sandbox from './Sandbox'
 import { fetchInitReference } from './features/formReference'
-import ScheduleBuilder from './ScheduleBuilder'
+import ScheduleBuilder from './pages/scheduleBuilder/ScheduleBuilder'
+import Layout from './layout/Layout'
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <HomePage />
+    element: <Layout><HomePage /></Layout>
   },
   {
     path: '/about',
@@ -29,13 +29,8 @@ const router = createBrowserRouter([
   },
   {
     path: '/scheduleBuilder',
-    element: <ScheduleBuilder />
+    element: <Layout><ScheduleBuilder /></Layout>
   },
-  // TODO: Find a way to ONLY include this in dev environment.
-  {
-    path: '/sandbox',
-    element: <Sandbox />
-  }
 ]);
 
 // Fetch initial state

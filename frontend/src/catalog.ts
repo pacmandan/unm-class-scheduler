@@ -66,3 +66,9 @@ export interface Section {
     status: Status;
     fees?: number;
 }
+
+export interface SelectedSection {
+    //index: number,
+    color: string,
+    section: Section
+  }
