@@ -1,4 +1,4 @@
-import { formatTime } from "@/utils";
+import { formatTime } from "./utils";
 
 test('correctly formats time that has seconds', () => {
   expect(formatTime("10:32:15")).toBe("10:32 AM")
