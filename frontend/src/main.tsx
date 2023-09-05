@@ -2,7 +2,6 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Provider } from 'react-redux'
 import store from './store'
-import App from './App'
 import HomePage from './pages/Home'
 import AboutPage from './pages/About'
 import {
@@ -21,11 +20,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/about',
-    element: <AboutPage />
-  },
-  {
-    path: '/app',
-    element: <App />
+    element: <Layout><AboutPage /></Layout>
   },
   {
     path: '/scheduleBuilder',
