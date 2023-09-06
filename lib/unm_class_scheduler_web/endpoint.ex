@@ -12,6 +12,12 @@ defmodule UnmClassSchedulerWeb.Endpoint do
 
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
+  # THIS IS A COMPILE-TIME APPLICATION VAR
+  # I couldn't get this to work with a runtime var
+  if Application.compile_env!(:unm_class_scheduler, :json_logging) do
+    #plug LoggerJSON.Plug, formatter: LoggerJSON.Plug.MetadataFormatters.GoogleCloudLogger
+  end
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phx.digest

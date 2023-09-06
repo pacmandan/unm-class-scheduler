@@ -7,6 +7,15 @@ defmodule UnmClassScheduler.Application do
 
   @impl true
   def start(_type, _args) do
+    if Application.fetch_env!(:unm_class_scheduler, :json_logging) do
+      :ok = :telemetry.attach(
+        "logger-json-ecto",
+        [:unm_class_scheduler, :repo, :query],
+        &LoggerJSON.Ecto.telemetry_logging_handler/4,
+        :debug
+      )
+    end
+
     children = [
       # Start the Ecto repository
       UnmClassScheduler.Repo,

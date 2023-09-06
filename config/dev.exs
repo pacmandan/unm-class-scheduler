@@ -1,5 +1,8 @@
 import Config
 
+# Set to true to enable JSON logging in Dev
+json_logging = false
+
 # Configure your database
 config :unm_class_scheduler, UnmClassScheduler.Repo,
   username: "unm_user",
@@ -65,7 +68,14 @@ config :unm_class_scheduler, UnmClassSchedulerWeb.Endpoint,
   ]
 
 # Do not include metadata nor timestamps in development logs
-config :logger, :console, format: "[$level] $message\n"
+config :logger, :console, format: "[$level] $message\n", level: :info
+
+if json_logging do
+  config :logger, backends: [LoggerJSON]
+  # Disable normal Ecto logs in favor of Telemetry logs defined in application.ex
+  config :unm_class_scheduler, UnmClassScheduler.Repo, log: false
+  config :unm_class_scheduler, json_logging: true
+end
 
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.

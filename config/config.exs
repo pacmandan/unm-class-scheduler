@@ -11,7 +11,8 @@ config :unm_class_scheduler,
   ecto_repos: [UnmClassScheduler.Repo]
 
 config :unm_class_scheduler,
-  env: config_env()
+  env: config_env(),
+  json_logging: false
 
 # Configures the endpoint
 config :unm_class_scheduler, UnmClassSchedulerWeb.Endpoint,
@@ -52,6 +53,17 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :logger_json, :backend,
+  metadata: :all,
+  json_encoder: Jason,
+  formatter: LoggerJSON.Formatters.GoogleCloudLogger
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
+
+
+#   config :logger, backends: [LoggerJSON], level: log_level
+
+#   config :unm_class_scheduler, UnmClassScheduler.Repo,
+#     log: false

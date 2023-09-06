@@ -9,7 +9,6 @@ import {
   RouterProvider,
 } from 'react-router-dom'
 import './index.css'
-import { fetchInitReference } from './features/formReference'
 import ScheduleBuilder from './pages/scheduleBuilder/ScheduleBuilder'
 import Layout from './layout/Layout'
 
@@ -27,9 +26,6 @@ const router = createBrowserRouter([
     element: <Layout><ScheduleBuilder /></Layout>
   },
 ]);
-
-// Fetch initial state
-store.dispatch(fetchInitReference())
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

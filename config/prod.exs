@@ -11,8 +11,11 @@ import Config
 # before starting your production server.
 config :unm_class_scheduler, UnmClassSchedulerWeb.Endpoint, cache_static_manifest: "priv/static/cache_manifest.json"
 
-# Do not print debug messages in production
-config :logger, level: :info
+# Configure logger
+config :logger, level: :info, backends: [LoggerJSON]
+# Disable normal Ecto logs in favor of Telemetry logs defined in application.ex
+config :unm_class_scheduler, UnmClassScheduler.Repo, log: false
+config :unm_class_scheduler, json_logging: true
 
 # ## SSL Support
 #
