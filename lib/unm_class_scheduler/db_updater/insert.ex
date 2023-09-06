@@ -34,24 +34,20 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
     Logger.info("Beginning mass insert...")
     Ecto.Multi.new()
     |> Ecto.Multi.run(
-      :statics,
-      (fn repo, _ -> StaticTables.ensure_all_updated(repo) end)
-    )
-    |> Ecto.Multi.run(
       PartOfTerm,
-      (fn repo, _ -> fetch_coded_and_cache_all(repo, PartOfTerm) end)
+      (fn repo, _ -> StaticTables.update(repo, PartOfTerm) end)
     )
     |> Ecto.Multi.run(
       Status,
-      (fn repo, _ -> fetch_coded_and_cache_all(repo, Status) end)
+      (fn repo, _ -> StaticTables.update(repo, Status) end)
     )
     |> Ecto.Multi.run(
       DeliveryType,
-      (fn repo, _ -> fetch_coded_and_cache_all(repo, DeliveryType) end)
+      (fn repo, _ -> StaticTables.update(repo, DeliveryType) end)
     )
     |> Ecto.Multi.run(
       InstructionalMethod,
-      (fn repo, _ -> fetch_coded_and_cache_all(repo, InstructionalMethod) end)
+      (fn repo, _ -> StaticTables.update(repo, InstructionalMethod) end)
     )
     |> Ecto.Multi.run(
       Semester,
@@ -119,14 +115,6 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
     )
     |> elem(1)
     |> tap(fn records -> Logger.info("Inserted #{length(records)} records to #{schema}") end)
-  end
-
-  defp fetch_coded_and_cache_all(repo, schema) do
-    repo.all(from(schema))
-    |> Enum.reduce(%{}, fn m, acc ->
-      Map.put(acc, m.code, m)
-    end)
-    |> then(&({:ok, &1}))
   end
 
   defp get_code(i), do: i.code

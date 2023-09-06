@@ -4,6 +4,8 @@ defmodule UnmClassScheduler.DBUpdater.StaticTables do
   alias UnmClassScheduler.Catalog.DeliveryType
   alias UnmClassScheduler.Catalog.InstructionalMethod
 
+  import Ecto.Query, only: [from: 1]
+
   require Logger
 
   @parts_of_term %{
@@ -83,36 +85,44 @@ defmodule UnmClassScheduler.DBUpdater.StaticTables do
     "ONL" => "Online",
   }
 
-  @schema_mapping [
-    {PartOfTerm, @parts_of_term},
-    {Status, @statuses},
-    {DeliveryType, @delivery_types},
-    {InstructionalMethod, @instructional_methods}
-  ]
+  @schema_mapping %{
+    PartOfTerm => @parts_of_term,
+    Status => @statuses,
+    DeliveryType => @delivery_types,
+    InstructionalMethod => @instructional_methods,
+  }
 
-  def ensure_all_updated(repo) do
+  @spec update(Ecto.Repo.t(), PartOfTerm | Status | DeliveryType | InstructionalMethod) :: {:ok, list(Ecto.Schema.t())}
+  def update(repo, schema) when schema in [PartOfTerm, Status, DeliveryType, InstructionalMethod] do
     placeholders = %{now: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)}
 
-    @schema_mapping
-    |> Enum.map(fn {schema, list} ->
-      list
-      |> Enum.map(&to_schema_map/1)
-      |> then(&(repo.insert_all(
-        schema,
-        &1,
-        on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
-        conflict_target: :code,
-        returning: true,
-        placeholders: placeholders
-      )))
-      |> elem(1)
-      |> tap(fn records -> Logger.info("Inserted #{length(records)} records to #{schema}") end)
-      |> Enum.map(fn record -> {record.code, record} end)
-      |> Map.new()
-      |> then(&({schema, &1}))
-    end)
-    |> Map.new()
+    @schema_mapping[schema]
+    |> Enum.map(&to_schema_map/1)
+    |> then(&(repo.insert_all(
+      schema,
+      &1,
+      on_conflict: {:replace_all_except, [:inserted_at, :uuid]},
+      conflict_target: schema.conflict_keys(),
+      returning: true,
+      placeholders: placeholders
+    )))
+    |> elem(1)
+    |> tap(fn records -> Logger.info("Inserted #{length(records)} records to #{schema}") end)
+
+    # Since this is a static table, if things ever change in the lists above,
+    # we want to return _all_ records, not just the "correct" ones. This will
+    # preserve IDs in case something gets accidentally deleted above.
+    # This is probably overkill, since we're replacing the whole table
+    # on every update anyway, but still...
+    fetch_all(repo, schema)
     |> then(&({:ok, &1}))
+  end
+
+  defp fetch_all(repo, schema) do
+    repo.all(from(schema))
+    |> Enum.reduce(%{}, fn m, acc ->
+      Map.put(acc, m.code, m)
+    end)
   end
 
   defp to_schema_map({key, value}) do
