@@ -47,7 +47,7 @@ defmodule UnmClassScheduler.MixProject do
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.18"},
-      {:jason, "~> 1.2"},
+      {:jason, "~> 1.3"},
       {:plug_cowboy, "~> 2.5"},
       {:saxy, "~> 1.5"},
       {:mox, "~> 1.0", only: :test},
@@ -55,6 +55,7 @@ defmodule UnmClassScheduler.MixProject do
       {:faker, "~> 0.17", only: :test},
       {:ex_machina, "~> 2.7.0", only: :test},
       {:httpoison, "~> 2.1"},
+      {:logger_json, "~> 5.0"},
     ]
   end
 

@@ -23,6 +23,8 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
 
   alias UnmClassScheduler.DBUpdater.XMLExtractor
 
+  alias UnmClassScheduler.DBUpdater.StaticTables
+
   import Ecto.Query
 
   require Logger
@@ -31,6 +33,10 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
   def mass_insert(extracted_attrs) do
     Logger.info("Beginning mass insert...")
     Ecto.Multi.new()
+    |> Ecto.Multi.run(
+      :statics,
+      (fn repo, _ -> StaticTables.ensure_all_updated(repo) end)
+    )
     |> Ecto.Multi.run(
       PartOfTerm,
       (fn repo, _ -> fetch_coded_and_cache_all(repo, PartOfTerm) end)

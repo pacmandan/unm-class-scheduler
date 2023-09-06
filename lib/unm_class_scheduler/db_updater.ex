@@ -21,7 +21,7 @@ defmodule UnmClassScheduler.DBUpdater do
 
   @spec download_and_run(list(String.t())) :: :ok
   def download_and_run(urls) do
-    :ok = prepare!()
+    :ok = ensure_application_started!()
 
     {:ok, files} = get_downloader().download_all(urls)
 
@@ -44,7 +44,7 @@ defmodule UnmClassScheduler.DBUpdater do
     Application.get_env(:unm_class_scheduler, :file_downloader, FileDownloader)
   end
 
-  defp prepare!() do
+  defp ensure_application_started!() do
     Application.ensure_all_started(:unm_class_scheduler)
     # Double-check the connection before we try downloading stuff.
     Ecto.Adapters.SQL.query!(UnmClassScheduler.Repo, "SELECT 1")
