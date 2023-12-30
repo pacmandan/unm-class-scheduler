@@ -29,6 +29,8 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
 
   require Logger
 
+  @transaction_timeout :timer.minutes(5)
+
   @spec mass_insert(XMLExtractor.completed_state_t()) :: any()
   def mass_insert(extracted_attrs) do
     Logger.info("Beginning mass insert...")
@@ -101,7 +103,7 @@ defmodule UnmClassScheduler.DBUpdater.Insert do
       :deleted,
       &delete_all_not_updated/2
     )
-    |> Repo.transaction(timeout: 60_000)
+    |> Repo.transaction(timeout: @transaction_timeout)
   end
 
   defp repo_insert_all(entries, schema, repo, placeholders) do

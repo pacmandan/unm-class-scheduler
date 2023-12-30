@@ -12,6 +12,8 @@ defmodule UnmClassScheduler.DBUpdater.FileDownloader do
 
   @behaviour __MODULE__
 
+  @download_timeout :timer.minutes(5)
+
   @impl true
   @spec download_all(list(String.t())) :: {:ok, list(String.t())}
   def download_all(urls) do
@@ -32,7 +34,7 @@ defmodule UnmClassScheduler.DBUpdater.FileDownloader do
   defp download_to_file(url, file_path) do
     File.rm(file_path)
     Logger.info("Downloading #{url} to #{file_path}...")
-    %HTTPoison.Response{body: body} = HTTPoison.get!(url)
+    %HTTPoison.Response{body: body} = HTTPoison.get!(url, [], recv_timeout: @download_timeout)
     File.write!(file_path, body)
     Logger.info("#{file_path} downloaded!")
     {:ok, file_path}
